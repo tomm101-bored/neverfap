@@ -1,5 +1,5 @@
 // app.js
-(function () {
+(() => {
   // ----- Config sanity -----
   const url = window.SUPABASE_URL;
   const key = window.SUPABASE_ANON_KEY;
@@ -9,6 +9,7 @@
     return;
   }
 
+  // ✅ Create Supabase client (CDN build)
   const supa = window.supabase.createClient(url, key);
 
   // ----- Elements -----
@@ -79,65 +80,60 @@
     return `${mins}m ${secs}s`;
   }
 
-function stageFromMs(ms) {
-  const h = ms / 3600000;
-  const d = ms / 86400000;
+  function stageFromMs(ms) {
+    const h = ms / 3600000;
+    const d = ms / 86400000;
 
-  if (!startedAt) return { name: "Unlit", vibe: "unlit" };
-  if (h < 12) return { name: "Spark", vibe: "yellow" };
-  if (h < 48) return { name: "Growing", vibe: "orange" };
-  if (d < 7) return { name: "Strong", vibe: "red" };
-  if (d < 21) return { name: "Focused", vibe: "purple" };
-  return { name: "Calm Control", vibe: "blue" };
-}
+    if (!startedAt) return { name: "Unlit", vibe: "unlit" };
+    if (h < 12) return { name: "Spark", vibe: "yellow" };
+    if (h < 48) return { name: "Growing", vibe: "orange" };
+    if (d < 7) return { name: "Strong", vibe: "red" };
+    if (d < 21) return { name: "Focused", vibe: "purple" };
+    return { name: "Calm Control", vibe: "blue" };
+  }
 
- function applyFlameVibe(vibe) {
-  const vibes = {
-    unlit: {
-      glow: "bg-slate-400/10",
-      core: "bg-gradient-to-br from-slate-300/30 to-slate-200/10",
-      inner: "bg-gradient-to-br from-slate-200/20 to-slate-100/10",
-    },
+  function applyFlameVibe(vibe) {
+    const vibes = {
+      unlit: {
+        glow: "bg-slate-400/10",
+        core: "bg-gradient-to-br from-slate-300/30 to-slate-200/10",
+        inner: "bg-gradient-to-br from-slate-200/20 to-slate-100/10",
+      },
+      yellow: {
+        glow: "bg-yellow-300/30",
+        core: "bg-gradient-to-br from-yellow-300 to-orange-400",
+        inner: "bg-gradient-to-br from-yellow-200 to-yellow-400",
+      },
+      orange: {
+        glow: "bg-orange-400/35",
+        core: "bg-gradient-to-br from-orange-400 to-red-500",
+        inner: "bg-gradient-to-br from-yellow-300 to-orange-500",
+      },
+      red: {
+        glow: "bg-red-500/40",
+        core: "bg-gradient-to-br from-red-500 to-purple-600",
+        inner: "bg-gradient-to-br from-orange-400 to-red-600",
+      },
+      purple: {
+        glow: "bg-purple-500/40",
+        core: "bg-gradient-to-br from-purple-500 to-indigo-600",
+        inner: "bg-gradient-to-br from-red-400 to-purple-600",
+      },
+      blue: {
+        glow: "bg-cyan-400/35",
+        core: "bg-gradient-to-br from-cyan-300 to-blue-500",
+        inner: "bg-gradient-to-br from-sky-200 to-cyan-400",
+      },
+    };
 
-    yellow: {
-      glow: "bg-yellow-300/30",
-      core: "bg-gradient-to-br from-yellow-300 to-orange-400",
-      inner: "bg-gradient-to-br from-yellow-200 to-yellow-400",
-    },
+    const v = vibes[vibe] || vibes.unlit;
 
-    orange: {
-      glow: "bg-orange-400/35",
-      core: "bg-gradient-to-br from-orange-400 to-red-500",
-      inner: "bg-gradient-to-br from-yellow-300 to-orange-500",
-    },
-
-    red: {
-      glow: "bg-red-500/40",
-      core: "bg-gradient-to-br from-red-500 to-purple-600",
-      inner: "bg-gradient-to-br from-orange-400 to-red-600",
-    },
-
-    purple: {
-      glow: "bg-purple-500/40",
-      core: "bg-gradient-to-br from-purple-500 to-indigo-600",
-      inner: "bg-gradient-to-br from-red-400 to-purple-600",
-    },
-
-    blue: {
-      glow: "bg-cyan-400/35",
-      core: "bg-gradient-to-br from-cyan-300 to-blue-500",
-      inner: "bg-gradient-to-br from-sky-200 to-cyan-400",
-    },
-  };
-
-  const v = vibes[vibe] || vibes.unlit;
-
-  flameGlow.className = `absolute inset-0 rounded-full blur-2xl ${v.glow}`;
-  flameCore.className =
-    `absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-3xl ${v.core}`;
-  flameInner.className =
-    `absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-2xl ${v.inner}`;
-}
+    flameGlow.className = `absolute inset-0 rounded-full blur-2xl ${v.glow}`;
+    flameCore.className =
+      `absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-3xl ${v.core}`;
+    flameInner.className =
+      `absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-2xl ${v.inner}`;
+  }
 
   function setView(isAuthed) {
     viewAuth.classList.toggle("hidden", isAuthed);
@@ -170,7 +166,7 @@ function stageFromMs(ms) {
       flameStageEl.textContent = "Unlit";
       elapsedEl.textContent = "—";
       startedAtEl.textContent = "Press Start to light it.";
-      applyFlameVibe("cool");
+      applyFlameVibe("unlit"); // ✅ fixed (was "cool")
       return;
     }
 
@@ -193,7 +189,6 @@ function stageFromMs(ms) {
 
   // ----- Supabase calls -----
   async function ensureProfileRow() {
-    // ensures a profile exists for user (important!)
     const { error } = await supa.from("profiles").upsert({ id: sessionUser.id }, { onConflict: "id" });
     if (error) throw error;
   }
@@ -265,7 +260,6 @@ function stageFromMs(ms) {
       diaryList.appendChild(wrap);
     }
 
-    // delete buttons
     document.querySelectorAll(".btnDel").forEach((btn) => {
       btn.addEventListener("click", async () => {
         try {
@@ -308,6 +302,7 @@ function stageFromMs(ms) {
 
     supa.auth.onAuthStateChange(async (_event, session) => {
       sessionUser = session?.user || null;
+
       if (sessionUser) {
         setView(true);
         userEmail.textContent = sessionUser.email;
@@ -360,13 +355,17 @@ function stageFromMs(ms) {
     }
   });
 
+  // ✅ SINGLE sign-out handler (no duplicates, no wrong variable)
   btnSignOut.addEventListener("click", async () => {
     try {
       setBusy(btnSignOut, true);
-      await supa.auth.signOut();
+      const { error } = await supa.auth.signOut();
+      if (error) throw error;
       showToast("Signed out.");
+      // UI will also update via onAuthStateChange
     } catch (e) {
       showToast(`Sign out failed: ${e.message}`);
+      console.error(e);
     } finally {
       setBusy(btnSignOut, false);
     }
