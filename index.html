@@ -34,14 +34,26 @@
   </head>
 
   <body class="min-h-screen text-white antialiased">
-    <!-- Background -->
-    <div class="fixed inset-0 -z-10">
-      <div class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-950 to-slate-900"></div>
-      <div class="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl"></div>
-      <div class="absolute top-64 left-16 h-[420px] w-[420px] rounded-full bg-orange-400/15 blur-3xl"></div>
-      <div class="absolute bottom-0 right-0 h-[560px] w-[560px] rounded-full bg-cyan-400/10 blur-3xl"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.06)_1px,transparent_0)] [background-size:22px_22px] opacity-25"></div>
-    </div>
+<!-- Background -->
+<div class="fixed inset-0 -z-10">
+  <!-- Base gradient -->
+  <div class="absolute inset-0 bg-gradient-to-b from-[#140802] via-[#0f0602] to-[#060301]"></div>
+
+  <!-- Vertical warmth -->
+  <div class="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent"></div>
+
+  <!-- Subtle grain texture -->
+  <div
+    class="absolute inset-0 opacity-[0.08]"
+    style="
+      background-image: url('data:image/svg+xml;utf8,\
+      <svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22>\
+      <filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22/></filter>\
+      <rect width=%22100%22 height=%22100%22 filter=%22url(%23n)%22 opacity=%220.4%22/>\
+      </svg>');
+    "
+  ></div>
+</div>
 
 <!-- Basic SEO -->
 <meta name="title" content="NeverFap">
@@ -114,7 +126,7 @@
 
           <div class="mt-6 flex flex-wrap gap-3">
             <button id="btnLogin"
-              class="rounded-2xl bg-indigo-500/80 px-5 py-3 text-sm font-bold shadow-glow transition hover:bg-indigo-500 active:scale-[0.98]">
+              class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
               Log in
             </button>
 
@@ -167,7 +179,7 @@
 
             <div class="mt-6 grid grid-cols-2 gap-3">
               <button id="btnStart"
-                class="rounded-2xl bg-orange-400/80 px-4 py-3 text-sm font-extrabold shadow-glowWarm transition hover:bg-orange-400 active:scale-[0.98]">
+                class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
                 Start
               </button>
 
@@ -202,7 +214,7 @@
 
             <div class="mt-3 flex gap-3">
               <button id="btnAddEntry"
-                class="rounded-2xl bg-indigo-500/80 px-4 py-3 text-sm font-bold shadow-glow transition hover:bg-indigo-500 active:scale-[0.98]">
+                class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
                 Add entry
               </button>
               <button id="btnClearText"
