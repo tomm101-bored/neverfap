@@ -316,9 +316,7 @@
 
   // ----- UI events -----
   btnDemoFill.addEventListener("click", () => {
-    emailEl.value = "demo@example.com";
-    passEl.value = "password123";
-    showToast("Demo filled (change it).");
+  window.location.href = "./demo.html";
   });
 
   btnSignup.addEventListener("click", async () => {
