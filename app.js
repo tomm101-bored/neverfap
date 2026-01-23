@@ -47,10 +47,29 @@
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toastText");
 
+  // Achievements UI (exists only after your index.html update)
+  const btnAchievements = document.getElementById("btnAchievements");
+  const achievementsModal = document.getElementById("achievementsModal");
+  const btnCloseAchievements = document.getElementById("btnCloseAchievements");
+  const achievementsBackdrop = document.getElementById("achievementsBackdrop");
+
+  // NEW: manual save
+  const btnSaveAchievements = document.getElementById("btnSaveAchievements");
+  const achSaveHint = document.getElementById("achSaveHint");
+
   // ----- State -----
   let sessionUser = null;
   let startedAt = null;
   let timer = null;
+
+  // Achievements state (stored in profiles)
+  let achievements = {};
+  let achievementsDirty = false;
+  let failCount = 0;
+
+  // Panic tracking (client side timer)
+  let panicStartedAtMs = null;
+  let panicCheckTimer = null;
 
   // ----- Helpers -----
   function showToast(msg) {
@@ -87,9 +106,11 @@
     if (!startedAt) return { name: "Unlit", vibe: "unlit" };
     if (h < 12) return { name: "Spark", vibe: "yellow" };
     if (h < 48) return { name: "Growing", vibe: "orange" };
-    if (d < 7) return { name: "Strong", vibe: "red" };
-    if (d < 21) return { name: "Focused", vibe: "purple" };
-    return { name: "Calm Control", vibe: "blue" };
+    if (d < 7) return { name: "Ruby Flame", vibe: "red" };
+    if (d < 21) return { name: "Amethyst Flame", vibe: "purple" };
+    if (d < 30) return { name: "Diamond Flame", vibe: "blue" };
+    if (d < 60) return { name: "Emerald Flame", vibe: "green" };
+    return { name: "Rose Flame", vibe: "pink" };
   }
 
   function applyFlameVibe(vibe) {
@@ -124,6 +145,16 @@
         core: "bg-gradient-to-br from-cyan-300 to-blue-500",
         inner: "bg-gradient-to-br from-sky-200 to-cyan-400",
       },
+      green: {
+        glow: "bg-green-500/40",
+        core: "bg-gradient-to-br from-green-400 to-lime-500",
+        inner: "bg-gradient-to-br from-lime-200 to-green-600",
+      },
+      pink: {
+        glow: "bg-fuchsia-400/45",
+        core: "bg-gradient-to-br from-pink-300 via-fuchsia-500 to-purple-600",
+        inner: "bg-gradient-to-br from-pink-100 to-fuchsia-400",
+      },
     };
 
     const v = vibes[vibe] || vibes.unlit;
@@ -141,12 +172,23 @@
     btnSignOut.classList.toggle("hidden", !isAuthed);
     userEmail.classList.toggle("hidden", !isAuthed);
 
+    // Achievements button only when authed
+    if (btnAchievements) btnAchievements.classList.toggle("hidden", !isAuthed);
+
     if (!isAuthed) {
       userEmail.textContent = "";
       stopTimer();
       startedAt = null;
       renderFlame();
       diaryList.innerHTML = "";
+      stopPanicTracking();
+
+      achievements = {};
+      achievementsDirty = false;
+      failCount = 0;
+
+      renderAchievementsUI();
+      closeAchievements();
     }
   }
 
@@ -157,7 +199,10 @@
 
   function startTimer() {
     stopTimer();
-    timer = setInterval(renderFlame, 1000);
+    timer = setInterval(() => {
+      renderFlame();
+      evaluateTimeBasedAchievements(); // keep checking streak achievements
+    }, 1000);
     renderFlame();
   }
 
@@ -166,7 +211,7 @@
       flameStageEl.textContent = "Unlit";
       elapsedEl.textContent = "—";
       startedAtEl.textContent = "Press Start to light it.";
-      applyFlameVibe("unlit"); // ✅ fixed (was "cool")
+      applyFlameVibe("unlit");
       return;
     }
 
@@ -187,9 +232,131 @@
       .replaceAll("'", "&#039;");
   }
 
+  // ----- Achievements helpers -----
+  const ACH = {
+    grower: { title: "Grower" },
+    self_control: { title: "Self control" },
+    part_of_process: { title: "It’s a part of the process" },
+    never_back_down: { title: "Never back down never what?" },
+    month_clean: { title: "A month clean" },
+    stronger_than_ever: { title: "Stronger than ever" },
+  };
+
+  function isUnlocked(key) {
+    return !!achievements?.[key]?.unlocked;
+  }
+
+  async function unlockAchievement(key) {
+    if (!sessionUser) return;
+    if (!ACH[key]) return;
+    if (isUnlocked(key)) return;
+
+    achievements = achievements || {};
+    achievements[key] = {
+      unlocked: true,
+      unlocked_at: new Date().toISOString(),
+    };
+
+    achievementsDirty = true;
+    renderAchievementsUI();
+
+    showToast(`Achievement unlocked: ${ACH[key].title} (remember to save)`);
+  }
+
+  function renderAchievementsUI() {
+    if (!document.querySelectorAll) return;
+
+    document.querySelectorAll(".achievement").forEach((el) => {
+      const key = el.getAttribute("data-key");
+      const unlocked = isUnlocked(key);
+      const unlockedAt = achievements?.[key]?.unlocked_at;
+
+      el.setAttribute("data-unlocked", unlocked ? "true" : "false");
+
+      el.classList.toggle("opacity-70", !unlocked);
+      el.classList.toggle("border-orange-400/30", unlocked);
+      el.classList.toggle("bg-orange-500/10", unlocked);
+
+      // expects your HTML to have these:
+      const icon = el.querySelector(".achIcon");
+      if (icon) icon.textContent = unlocked ? "✅" : "🔒";
+
+      const meta = el.querySelector(".achMeta");
+      if (meta) meta.textContent = unlockedAt ? `Unlocked: ${new Date(unlockedAt).toLocaleString()}` : "";
+    });
+
+    if (btnSaveAchievements) {
+      btnSaveAchievements.disabled = !achievementsDirty;
+      btnSaveAchievements.classList.toggle("opacity-60", !achievementsDirty);
+      btnSaveAchievements.classList.toggle("cursor-not-allowed", !achievementsDirty);
+      btnSaveAchievements.textContent = achievementsDirty ? "Save achievements" : "Saved ✓";
+    }
+
+    if (achSaveHint) {
+      achSaveHint.textContent = achievementsDirty ? "Manual save to prevent bugs." : "All set.";
+    }
+  }
+
+  function openAchievements() {
+    if (!achievementsModal) return;
+    achievementsModal.classList.remove("hidden");
+    achievementsModal.classList.add("flex");
+    renderAchievementsUI();
+  }
+
+  function closeAchievements() {
+    if (!achievementsModal) return;
+    achievementsModal.classList.add("hidden");
+    achievementsModal.classList.remove("flex");
+  }
+
+  async function saveAchievementsNow() {
+    if (!sessionUser) return;
+
+    await ensureProfileRow();
+
+    const { error } = await supa
+      .from("profiles")
+      .update({ achievements })
+      .eq("id", sessionUser.id);
+
+    if (error) throw error;
+
+    achievementsDirty = false;
+    renderAchievementsUI();
+    showToast("Achievements saved ✅");
+  }
+
+  // ----- Panic tracking ("Self control") -----
+  function startPanicTracking() {
+    panicStartedAtMs = Date.now();
+
+    if (panicCheckTimer) clearInterval(panicCheckTimer);
+
+    panicCheckTimer = setInterval(async () => {
+      if (!panicStartedAtMs) return;
+      const elapsed = Date.now() - panicStartedAtMs;
+
+      if (elapsed >= 30 * 60 * 1000) {
+        stopPanicTracking();
+        await unlockAchievement("self_control");
+      }
+    }, 1000);
+  }
+
+  function stopPanicTracking() {
+    panicStartedAtMs = null;
+    if (panicCheckTimer) clearInterval(panicCheckTimer);
+    panicCheckTimer = null;
+  }
+
   // ----- Supabase calls -----
   async function ensureProfileRow() {
-    const { error } = await supa.from("profiles").upsert({ id: sessionUser.id }, { onConflict: "id" });
+    // Ensure row exists, but DON'T overwrite achievements/fail_count.
+    const { error } = await supa
+      .from("profiles")
+      .upsert({ id: sessionUser.id }, { onConflict: "id" });
+
     if (error) throw error;
   }
 
@@ -198,14 +365,21 @@
 
     const { data, error } = await supa
       .from("profiles")
-      .select("started_at")
+      .select("started_at, achievements, fail_count")
       .eq("id", sessionUser.id)
       .single();
 
     if (error) throw error;
 
     startedAt = data?.started_at ? new Date(data.started_at) : null;
+    achievements = data?.achievements || {};
+    failCount = Number.isFinite(data?.fail_count) ? data.fail_count : 0;
+    achievementsDirty = false;
+
+    renderAchievementsUI();
     startTimer();
+
+    await evaluateTimeBasedAchievements(true);
   }
 
   async function setStartedNow() {
@@ -220,7 +394,45 @@
 
     if (error) throw error;
     startedAt = data?.started_at ? new Date(data.started_at) : null;
+
+    stopPanicTracking();
+
     renderFlame();
+    await evaluateTimeBasedAchievements(true);
+  }
+
+  async function incrementFailCountAndSave() {
+    failCount = (failCount || 0) + 1;
+
+    const { error } = await supa
+      .from("profiles")
+      .update({ fail_count: failCount })
+      .eq("id", sessionUser.id);
+
+    if (error) throw error;
+
+    if (failCount >= 1) await unlockAchievement("part_of_process");
+    if (failCount >= 5) await unlockAchievement("never_back_down");
+  }
+
+  async function evaluateTimeBasedAchievements(force = false) {
+    if (!sessionUser || !startedAt) return;
+
+    const ms = Date.now() - startedAt.getTime();
+    const d = ms / 86400000;
+    const h = ms / 3600000;
+
+    if (force || (!isUnlocked("grower") && h >= 12)) {
+      if (h >= 12) await unlockAchievement("grower");
+    }
+
+    if (force || (!isUnlocked("month_clean") && d >= 30)) {
+      if (d >= 30) await unlockAchievement("month_clean");
+    }
+
+    if (force || (!isUnlocked("stronger_than_ever") && d >= 60)) {
+      if (d >= 60) await unlockAchievement("stronger_than_ever");
+    }
   }
 
   async function loadDiary() {
@@ -316,7 +528,7 @@
 
   // ----- UI events -----
   btnDemoFill.addEventListener("click", () => {
-  window.location.href = "./demo.html";
+    window.location.href = "./demo.html";
   });
 
   btnSignup.addEventListener("click", async () => {
@@ -353,14 +565,13 @@
     }
   });
 
-  // ✅ SINGLE sign-out handler (no duplicates, no wrong variable)
+  // ✅ SINGLE sign-out handler
   btnSignOut.addEventListener("click", async () => {
     try {
       setBusy(btnSignOut, true);
       const { error } = await supa.auth.signOut();
       if (error) throw error;
       showToast("Signed out.");
-      // UI will also update via onAuthStateChange
     } catch (e) {
       showToast(`Sign out failed: ${e.message}`);
       console.error(e);
@@ -384,7 +595,11 @@
   btnFailed.addEventListener("click", async () => {
     try {
       setBusy(btnFailed, true);
+
+      stopPanicTracking();
+      await incrementFailCountAndSave();
       await setStartedNow();
+
       showToast("Its ok to fail, start again :)");
     } catch (e) {
       showToast(`Reset failed: ${e.message}`);
@@ -396,6 +611,8 @@
   btnPanic.addEventListener("click", () => {
     panicModal.classList.remove("hidden");
     panicModal.classList.add("flex");
+
+    if (!panicStartedAtMs) startPanicTracking();
   });
 
   btnClosePanic.addEventListener("click", () => {
@@ -435,6 +652,25 @@
       setBusy(btnRefreshDiary, false);
     }
   });
+
+  // Achievements UI wiring
+  if (btnAchievements) btnAchievements.addEventListener("click", openAchievements);
+  if (btnCloseAchievements) btnCloseAchievements.addEventListener("click", closeAchievements);
+  if (achievementsBackdrop) achievementsBackdrop.addEventListener("click", closeAchievements);
+
+  if (btnSaveAchievements) {
+    btnSaveAchievements.addEventListener("click", async () => {
+      try {
+        setBusy(btnSaveAchievements, true);
+        await saveAchievementsNow();
+      } catch (e) {
+        showToast(`Save failed: ${e.message}`);
+        console.error(e);
+      } finally {
+        setBusy(btnSaveAchievements, false);
+      }
+    });
+  }
 
   // go
   init();

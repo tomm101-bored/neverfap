@@ -22,29 +22,32 @@
       };
     </script>
 
-    <link rel="icon" type="image/png" href="https://i.imgur.com/nioL0w7.png">
-    <link rel="apple-touch-icon" href="https://i.imgur.com/nioL0w7.png">
+    <link rel="icon" type="image/png" href="https://i.imgur.com/nioL0w7.png" />
+    <link rel="apple-touch-icon" href="https://i.imgur.com/nioL0w7.png" />
 
     <!-- Basic SEO -->
-    <meta name="title" content="NeverFap">
-    <meta name="description" content="A minimal, private tool to help quit porn. Grow your flame with time, reset when needed, and keep a private diary.">
+    <meta name="title" content="NeverFap" />
+    <meta
+      name="description"
+      content="A minimal, private tool to help quit porn. Grow your flame with time, reset when needed, and keep a private diary."
+    />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="NeverFap">
-    <meta property="og:description" content="Grow your flame by staying clean. Reset if you fail. Private diary. Calm control over time.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://tomm101-bored.github.io/neverfap/">
-    <meta property="og:image" content="https://i.imgur.com/5rnMblI.png">
+    <meta property="og:title" content="NeverFap" />
+    <meta property="og:description" content="Grow your flame by staying clean. Reset if you fail. Private diary. Calm control over time." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tomm101-bored.github.io/neverfap/" />
+    <meta property="og:image" content="https://i.imgur.com/5rnMblI.png" />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="NeverFap">
-    <meta name="twitter:description" content="A private flame-based tracker for quitting porn. Minimal. Persistent. Yours.">
-    <meta name="twitter:image" content="https://dummyimage.com/1200x630/0f172a/f59e0b&text=NeverFap+Flame+Pet">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NeverFap" />
+    <meta name="twitter:description" content="A private flame-based tracker for quitting porn. Minimal. Persistent. Yours." />
+    <meta name="twitter:image" content="https://dummyimage.com/1200x630/0f172a/f59e0b&text=NeverFap+Flame+Pet" />
 
     <!-- Theme color (browser UI / mobile) -->
-    <meta name="theme-color" content="#f59e0b" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#f59e0b" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
   </head>
 
   <body class="min-h-screen text-white antialiased">
@@ -79,12 +82,22 @@
 
         <div class="flex items-center gap-2">
           <span id="userEmail" class="text-sm text-white/70 md:inline">demo@email.com</span>
-        <a
-        href="https://tommfr38.github.io/neverfap/"
-        class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
-        >
-        Sign out
-        </a>
+
+          <!-- Achievements button (demo only) -->
+          <button
+            id="btnAchievements"
+            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/85 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
+            type="button"
+          >
+            Achievements
+          </button>
+
+          <a
+            href="https://tommfr38.github.io/neverfap/"
+            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
+          >
+            Sign out
+          </a>
         </div>
       </header>
 
@@ -208,7 +221,7 @@
           </div>
         </div>
 
-        <!-- iOS button (ONLY clickable button) -->
+        <!-- iOS button (clickable) -->
         <a
           href="./nfios.html"
           class="mt-6 block w-full rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-center text-sm font-extrabold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.99]"
@@ -217,9 +230,126 @@
         </a>
       </section>
 
+      <!-- Achievements Modal (demo) -->
+      <div id="achievementsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div id="achievementsBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur"></div>
+
+        <div class="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-bold">Achievements</h3>
+              <p class="mt-1 text-sm text-white/60">Demo preview (read-only).</p>
+            </div>
+
+            <button
+              id="btnCloseAchievements"
+              class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <!-- Unlocked in demo -->
+            <div class="achievement rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4" data-key="grower" data-unlocked="true">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">Grower</div>
+                  <div class="text-sm text-white/60">Grow your flame once (Spark → Growing).</div>
+                  <div class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/5/2026, 08:21</div>
+                </div>
+                <div class="achIcon text-xs">✅</div>
+              </div>
+            </div>
+
+            <div class="achievement rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4" data-key="part_of_process" data-unlocked="true">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">It’s a part of the process</div>
+                  <div class="text-sm text-white/60">Fail your streak.</div>
+                  <div class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/7/2026, 19:02</div>
+                </div>
+                <div class="achIcon text-xs">✅</div>
+              </div>
+            </div>
+
+            <!-- Locked in demo -->
+            <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="self_control" data-unlocked="false">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">Self control</div>
+                  <div class="text-sm text-white/60">Press PANIC and don’t fail for 30 minutes.</div>
+                </div>
+                <div class="achIcon text-xs">🔒</div>
+              </div>
+            </div>
+
+            <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="never_back_down" data-unlocked="false">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">Never back down never what?</div>
+                  <div class="text-sm text-white/60">Fail 5 times.</div>
+                </div>
+                <div class="achIcon text-xs">🔒</div>
+              </div>
+            </div>
+
+            <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="month_clean" data-unlocked="false">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">A month clean</div>
+                  <div class="text-sm text-white/60">Reach the Emerald Flame (30 days).</div>
+                </div>
+                <div class="achIcon text-xs">🔒</div>
+              </div>
+            </div>
+
+            <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="stronger_than_ever" data-unlocked="false">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="font-semibold">Stronger than ever</div>
+                  <div class="text-sm text-white/60">Reach the Ruby Flame (60 days).</div>
+                </div>
+                <div class="achIcon text-xs">🔒</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Demo note -->
+          <div class="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+            This is a demo preview. Achievements are shown only — they can’t be changed here.
+          </div>
+        </div>
+      </div>
+
       <footer class="mt-10 text-center text-xs text-white/40">
         Built by Tomm for a healthier world. Any bugs can be DM-ed to me on tiktok @tommfr38
       </footer>
     </main>
+
+    <!-- Tiny modal script (demo only) -->
+    <script>
+      const btnAchievements = document.getElementById("btnAchievements");
+      const achievementsModal = document.getElementById("achievementsModal");
+      const btnCloseAchievements = document.getElementById("btnCloseAchievements");
+      const achievementsBackdrop = document.getElementById("achievementsBackdrop");
+
+      function openAch() {
+        achievementsModal.classList.remove("hidden");
+        achievementsModal.classList.add("flex");
+      }
+      function closeAch() {
+        achievementsModal.classList.add("hidden");
+        achievementsModal.classList.remove("flex");
+      }
+
+      btnAchievements?.addEventListener("click", openAch);
+      btnCloseAchievements?.addEventListener("click", closeAch);
+      achievementsBackdrop?.addEventListener("click", closeAch);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeAch();
+      });
+    </script>
   </body>
 </html>
