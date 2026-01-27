@@ -67,10 +67,6 @@
   let achievementsDirty = false;
   let failCount = 0;
 
-  // Panic tracking (client side timer)
-  let panicStartedAtMs = null;
-  let panicCheckTimer = null;
-
   // ----- Helpers -----
   function showToast(msg) {
     toastText.textContent = msg;
@@ -235,7 +231,7 @@
   // ----- Achievements helpers -----
   const ACH = {
     grower: { title: "Grower" },
-    self_control: { title: "Self control" },
+    self_control: { title: "You can stop this" },
     part_of_process: { title: "It’s a part of the process" },
     never_back_down: { title: "Never back down never what?" },
     month_clean: { title: "A month clean" },
@@ -325,29 +321,6 @@
     achievementsDirty = false;
     renderAchievementsUI();
     showToast("Achievements saved ✅");
-  }
-
-  // ----- Panic tracking ("Self control") -----
-  function startPanicTracking() {
-    panicStartedAtMs = Date.now();
-
-    if (panicCheckTimer) clearInterval(panicCheckTimer);
-
-    panicCheckTimer = setInterval(async () => {
-      if (!panicStartedAtMs) return;
-      const elapsed = Date.now() - panicStartedAtMs;
-
-      if (elapsed >= 30 * 60 * 1000) {
-        stopPanicTracking();
-        await unlockAchievement("self_control");
-      }
-    }, 1000);
-  }
-
-  function stopPanicTracking() {
-    panicStartedAtMs = null;
-    if (panicCheckTimer) clearInterval(panicCheckTimer);
-    panicCheckTimer = null;
   }
 
   // ----- Supabase calls -----
@@ -612,7 +585,7 @@
     panicModal.classList.remove("hidden");
     panicModal.classList.add("flex");
 
-    if (!panicStartedAtMs) startPanicTracking();
+    unlockAchievement("self_control");
   });
 
   btnClosePanic.addEventListener("click", () => {
