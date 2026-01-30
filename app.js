@@ -67,6 +67,10 @@
   let achievementsDirty = false;
   let failCount = 0;
 
+  // Panic tracking (kept for resets; achievement now unlocks on PANIC click)
+  let panicStartedAtMs = null;
+  let panicCheckTimer = null;
+
   // ----- Helpers -----
   function showToast(msg) {
     toastText.textContent = msg;
@@ -155,11 +159,39 @@
 
     const v = vibes[vibe] || vibes.unlit;
 
-    flameGlow.className = `absolute inset-0 rounded-full blur-2xl ${v.glow}`;
-    flameCore.className =
-      `absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-3xl ${v.core}`;
-    flameInner.className =
-      `absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-2xl ${v.inner}`;
+    // Keep positioning/sizing classes from HTML; only swap background/gradient classes.
+    const clearBgClasses = (el) => {
+      if (!el) return;
+      [...el.classList].forEach((c) => {
+        if (
+          c.startsWith("bg-") ||
+          c.startsWith("from-") ||
+          c.startsWith("to-") ||
+          c.startsWith("via-") ||
+          c.startsWith("text-") ||
+          c === "bg-gradient-to-br" ||
+          c === "bg-gradient-to-b" ||
+          c === "bg-gradient-to-t" ||
+          c === "bg-gradient-to-r" ||
+          c === "bg-gradient-to-l"
+        ) {
+          el.classList.remove(c);
+        }
+      });
+    };
+
+    const applyClasses = (el, classStr) => {
+      if (!el) return;
+      clearBgClasses(el);
+      classStr
+        .split(/\s+/)
+        .filter(Boolean)
+        .forEach((c) => el.classList.add(c));
+    };
+
+    applyClasses(flameGlow, v.glow);
+    applyClasses(flameCore, v.core);
+    applyClasses(flameInner, v.inner);
   }
 
   function setView(isAuthed) {
@@ -171,6 +203,8 @@
     // Achievements button only when authed
     if (btnAchievements) btnAchievements.classList.toggle("hidden", !isAuthed);
 
+
+    
     if (!isAuthed) {
       userEmail.textContent = "";
       stopTimer();
@@ -185,6 +219,15 @@
 
       renderAchievementsUI();
       closeAchievements();
+    }
+  }
+
+  function stopPanicTracking() {
+    panicStartedAtMs = null;
+
+    if (panicCheckTimer) {
+      clearInterval(panicCheckTimer);
+      panicCheckTimer = null;
     }
   }
 
@@ -273,11 +316,15 @@
       el.classList.toggle("border-orange-400/30", unlocked);
       el.classList.toggle("bg-orange-500/10", unlocked);
 
-      // expects your HTML to have these:
-      const icon = el.querySelector(".achIcon");
+      // Icon + meta (be tolerant to different HTML structures)
+      const icon =
+        el.querySelector(".achIcon") ||
+        el.querySelector("[data-ach-icon]") ||
+        el.querySelector(".text-xs") ||
+        el.querySelector(".text-sm");
       if (icon) icon.textContent = unlocked ? "✅" : "🔒";
 
-      const meta = el.querySelector(".achMeta");
+      const meta = el.querySelector(".achMeta") || el.querySelector("[data-ach-meta]");
       if (meta) meta.textContent = unlockedAt ? `Unlocked: ${new Date(unlockedAt).toLocaleString()}` : "";
     });
 
@@ -581,11 +628,16 @@
     }
   });
 
-  btnPanic.addEventListener("click", () => {
+  btnPanic.addEventListener("click", async () => {
     panicModal.classList.remove("hidden");
     panicModal.classList.add("flex");
 
-    unlockAchievement("self_control");
+    // New behavior: instant achievement on pressing PANIC (keeps the same Supabase key)
+    try {
+      await unlockAchievement("self_control");
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   btnClosePanic.addEventListener("click", () => {
