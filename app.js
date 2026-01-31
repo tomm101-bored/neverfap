@@ -12,6 +12,10 @@
   // ✅ Create Supabase client (CDN build)
   const supa = window.supabase.createClient(url, key);
 
+  // Expose for debugging / console use (prevents "supa is not defined")
+  window.supa = supa;
+  window.supaClient = supa;
+
   // ----- Elements -----
   const viewAuth = document.getElementById("viewAuth");
   const viewApp = document.getElementById("viewApp");
@@ -547,11 +551,17 @@
   }
 
   // ----- UI events -----
-  btnDemoFill.addEventListener("click", () => {
+  // Safe event binding (prevents crashes if a button is missing in a new UI)
+  const on = (el, evt, fn) => {
+    if (!el) return;
+    el.addEventListener(evt, fn);
+  };
+
+  on(btnDemoFill, "click", () => {
     window.location.href = "./demo.html";
   });
 
-  btnSignup.addEventListener("click", async () => {
+  on(btnSignup, "click", async () => {
     try {
       setBusy(btnSignup, true);
       const email = emailEl.value.trim();
@@ -568,7 +578,7 @@
     }
   });
 
-  btnLogin.addEventListener("click", async () => {
+  on(btnLogin, "click", async () => {
     try {
       setBusy(btnLogin, true);
       const email = emailEl.value.trim();
@@ -586,7 +596,7 @@
   });
 
   // ✅ SINGLE sign-out handler
-  btnSignOut.addEventListener("click", async () => {
+  on(btnSignOut, "click", async () => {
     try {
       setBusy(btnSignOut, true);
       const { error } = await supa.auth.signOut();
@@ -600,7 +610,7 @@
     }
   });
 
-  btnStart.addEventListener("click", async () => {
+  on(btnStart, "click", async () => {
     try {
       setBusy(btnStart, true);
       await setStartedNow();
@@ -612,7 +622,7 @@
     }
   });
 
-  btnFailed.addEventListener("click", async () => {
+  on(btnFailed, "click", async () => {
     try {
       setBusy(btnFailed, true);
 
@@ -628,7 +638,7 @@
     }
   });
 
-  btnPanic.addEventListener("click", async () => {
+  on(btnPanic, "click", async () => {
     panicModal.classList.remove("hidden");
     panicModal.classList.add("flex");
 
@@ -640,17 +650,17 @@
     }
   });
 
-  btnClosePanic.addEventListener("click", () => {
+  on(btnClosePanic, "click", () => {
     panicModal.classList.add("hidden");
     panicModal.classList.remove("flex");
   });
 
-  btnClearText.addEventListener("click", () => {
+  on(btnClearText, "click", () => {
     diaryText.value = "";
     diaryText.focus();
   });
 
-  btnAddEntry.addEventListener("click", async () => {
+  on(btnAddEntry, "click", async () => {
     const text = diaryText.value.trim();
     if (!text) return showToast("Write something first.");
     try {
@@ -666,7 +676,7 @@
     }
   });
 
-  btnRefreshDiary.addEventListener("click", async () => {
+  on(btnRefreshDiary, "click", async () => {
     try {
       setBusy(btnRefreshDiary, true);
       await loadDiary();
@@ -679,23 +689,21 @@
   });
 
   // Achievements UI wiring
-  if (btnAchievements) btnAchievements.addEventListener("click", openAchievements);
-  if (btnCloseAchievements) btnCloseAchievements.addEventListener("click", closeAchievements);
-  if (achievementsBackdrop) achievementsBackdrop.addEventListener("click", closeAchievements);
+  on(btnAchievements, "click", openAchievements);
+  on(btnCloseAchievements, "click", closeAchievements);
+  on(achievementsBackdrop, "click", closeAchievements);
 
-  if (btnSaveAchievements) {
-    btnSaveAchievements.addEventListener("click", async () => {
-      try {
-        setBusy(btnSaveAchievements, true);
-        await saveAchievementsNow();
-      } catch (e) {
-        showToast(`Save failed: ${e.message}`);
-        console.error(e);
-      } finally {
-        setBusy(btnSaveAchievements, false);
-      }
-    });
-  }
+  on(btnSaveAchievements, "click", async () => {
+    try {
+      setBusy(btnSaveAchievements, true);
+      await saveAchievementsNow();
+    } catch (e) {
+      showToast(`Save failed: ${e.message}`);
+      console.error(e);
+    } finally {
+      setBusy(btnSaveAchievements, false);
+    }
+  });
 
   // go
   init();
