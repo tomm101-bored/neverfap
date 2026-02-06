@@ -108,7 +108,17 @@
           <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glowWarm backdrop-blur">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <h2 class="text-xl font-semibold">Your Flame</h2>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-xl font-semibold">Your Flame</h2>
+                  <button
+                    id="btnFlameInfo"
+                    class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-bold text-white/70 shadow-glow transition hover:bg-white/10 active:scale-[0.95]"
+                    title="Flame stages"
+                    aria-label="Flame stages info"
+                  >
+                    ⓘ
+                  </button>
+                </div>
                 <p class="text-sm text-white/60">Your little buddy who grows with time!</p>
               </div>
               <div class="rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-white/70">
@@ -328,27 +338,100 @@
       </footer>
     </main>
 
+    <!-- FLAME INFO MODAL (demo) -->
+<div id="flameInfoModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+  <div id="flameInfoBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur"></div>
+
+  <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h3 class="text-lg font-extrabold">Flame stages</h3>
+        <p class="mt-1 text-sm text-white/60">How your flame evolves over time.</p>
+      </div>
+
+      <button
+        id="btnCloseFlameInfo"
+        class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]"
+      >
+        Close
+      </button>
+    </div>
+
+    <div class="mt-5 space-y-2 text-sm">
+      <div class="rounded-2xl border border-white/10 bg-white/10 p-3">
+        <div class="font-bold">Calm Control <span class="text-xs text-orange-300">(current)</span></div>
+        <div class="text-white/60 text-xs">14–21 days</div>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div class="font-semibold">Diamond Flame</div>
+        <div class="text-white/60 text-xs">21–30 days</div>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div class="font-semibold">Emerald Flame</div>
+        <div class="text-white/60 text-xs">30–60 days</div>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div class="font-semibold">Rose Flame</div>
+        <div class="text-white/60 text-xs">60+ days</div>
+      </div>
+    </div>
+
+    <p class="mt-5 text-xs text-white/50">
+      Demo preview — real stages update live in your account.
+    </p>
+  </div>
+</div>
+
     <!-- Tiny modal script (demo only) -->
     <script>
+      // Achievements modal
       const btnAchievements = document.getElementById("btnAchievements");
       const achievementsModal = document.getElementById("achievementsModal");
       const btnCloseAchievements = document.getElementById("btnCloseAchievements");
       const achievementsBackdrop = document.getElementById("achievementsBackdrop");
 
       function openAch() {
-        achievementsModal.classList.remove("hidden");
-        achievementsModal.classList.add("flex");
+        achievementsModal?.classList.remove("hidden");
+        achievementsModal?.classList.add("flex");
       }
+
       function closeAch() {
-        achievementsModal.classList.add("hidden");
-        achievementsModal.classList.remove("flex");
+        achievementsModal?.classList.add("hidden");
+        achievementsModal?.classList.remove("flex");
       }
 
       btnAchievements?.addEventListener("click", openAch);
       btnCloseAchievements?.addEventListener("click", closeAch);
       achievementsBackdrop?.addEventListener("click", closeAch);
+
+      // Flame info modal
+      const btnFlameInfo = document.getElementById("btnFlameInfo");
+      const flameInfoModal = document.getElementById("flameInfoModal");
+      const btnCloseFlameInfo = document.getElementById("btnCloseFlameInfo");
+      const flameInfoBackdrop = document.getElementById("flameInfoBackdrop");
+
+      function openFlameInfo() {
+        flameInfoModal?.classList.remove("hidden");
+        flameInfoModal?.classList.add("flex");
+      }
+
+      function closeFlameInfo() {
+        flameInfoModal?.classList.add("hidden");
+        flameInfoModal?.classList.remove("flex");
+      }
+
+      btnFlameInfo?.addEventListener("click", openFlameInfo);
+      btnCloseFlameInfo?.addEventListener("click", closeFlameInfo);
+      flameInfoBackdrop?.addEventListener("click", closeFlameInfo);
+
+      // ESC closes whatever is open
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeAch();
+        if (e.key !== "Escape") return;
+        closeAch();
+        closeFlameInfo();
       });
     </script>
   </body>

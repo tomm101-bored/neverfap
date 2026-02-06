@@ -35,6 +35,13 @@
   const flameCore = document.getElementById("flameCore");
   const flameInner = document.getElementById("flameInner");
 
+  // Flame info modal
+  const btnFlameInfo = document.getElementById("btnFlameInfo");
+  const flameInfoModal = document.getElementById("flameInfoModal");
+  const flameInfoBackdrop = document.getElementById("flameInfoBackdrop");
+  const btnCloseFlameInfo = document.getElementById("btnCloseFlameInfo");
+  const flameInfoList = document.getElementById("flameInfoList");
+
   const btnStart = document.getElementById("btnStart");
   const btnFailed = document.getElementById("btnFailed");
 
@@ -115,6 +122,57 @@
     if (d < 30) return { name: "Diamond Flame", vibe: "blue" };
     if (d < 60) return { name: "Emerald Flame", vibe: "green" };
     return { name: "Rose Flame", vibe: "pink" };
+  }
+
+  function getStageInfoRows() {
+    // MUST match stageFromMs()
+    return [
+      { name: "Unlit", range: "Before Start" },
+      { name: "Spark", range: "0–12 hours" },
+      { name: "Growing", range: "12–48 hours" },
+      { name: "Ruby Flame", range: "2–7 days" },
+      { name: "Amethyst Flame", range: "7–21 days" },
+      { name: "Diamond Flame", range: "21–30 days" },
+      { name: "Emerald Flame", range: "30–60 days" },
+      { name: "Rose Flame", range: "60+ days" },
+    ];
+  }
+
+  function renderFlameInfo() {
+    if (!flameInfoList) return;
+
+    const currentStageName = startedAt
+      ? stageFromMs(Date.now() - startedAt.getTime()).name
+      : "Unlit";
+
+    flameInfoList.innerHTML = getStageInfoRows()
+      .map((r) => {
+        const isCurrent = r.name === currentStageName;
+        return `
+          <div class="rounded-2xl border border-white/10 ${isCurrent ? "bg-white/10" : "bg-white/5"} p-3">
+            <div class="flex items-center justify-between gap-3">
+              <div class="font-bold ${isCurrent ? "text-white" : "text-white/90"}">
+                ${r.name}${isCurrent ? ' <span class="text-xs text-orange-300/90">(current)</span>' : ""}
+              </div>
+              <div class="text-xs text-white/60">${r.range}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function openFlameInfo() {
+    if (!flameInfoModal) return;
+    renderFlameInfo();
+    flameInfoModal.classList.remove("hidden");
+    flameInfoModal.classList.add("flex");
+  }
+
+  function closeFlameInfo() {
+    if (!flameInfoModal) return;
+    flameInfoModal.classList.add("hidden");
+    flameInfoModal.classList.remove("flex");
   }
 
   function applyFlameVibe(vibe) {
@@ -264,6 +322,11 @@
     elapsedEl.textContent = fmtDuration(ms);
     startedAtEl.textContent = `Started: ${startedAt.toLocaleString()}`;
     applyFlameVibe(stage.vibe);
+
+    // Keep the flame info modal in sync if it's open
+    if (flameInfoModal && !flameInfoModal.classList.contains("hidden")) {
+      renderFlameInfo();
+    }
   }
 
   function escapeHtml(str) {
@@ -692,6 +755,18 @@
   on(btnAchievements, "click", openAchievements);
   on(btnCloseAchievements, "click", closeAchievements);
   on(achievementsBackdrop, "click", closeAchievements);
+
+  // Flame info modal wiring
+  on(btnFlameInfo, "click", openFlameInfo);
+  on(btnCloseFlameInfo, "click", closeFlameInfo);
+  on(flameInfoBackdrop, "click", closeFlameInfo);
+
+  // ESC to close flame info (and achievements if open)
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    closeFlameInfo();
+    closeAchievements();
+  });
 
   on(btnSaveAchievements, "click", async () => {
     try {
