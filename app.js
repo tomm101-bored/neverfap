@@ -12,7 +12,7 @@
   // ✅ Create Supabase client (CDN build)
   const supa = window.supabase.createClient(url, key);
 
-  // Expose for debugging / console use (prevents "supa is not defined")
+  // Debug helpers
   window.supa = supa;
   window.supaClient = supa;
 
@@ -58,13 +58,13 @@
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toastText");
 
-  // Achievements UI (exists only after your index.html update)
+  // Achievements UI
   const btnAchievements = document.getElementById("btnAchievements");
   const achievementsModal = document.getElementById("achievementsModal");
   const btnCloseAchievements = document.getElementById("btnCloseAchievements");
   const achievementsBackdrop = document.getElementById("achievementsBackdrop");
 
-  // NEW: manual save
+  // Manual save
   const btnSaveAchievements = document.getElementById("btnSaveAchievements");
   const achSaveHint = document.getElementById("achSaveHint");
 
@@ -78,12 +78,14 @@
   let achievementsDirty = false;
   let failCount = 0;
 
-  // Panic tracking (kept for resets; achievement now unlocks on PANIC click)
-  let panicStartedAtMs = null;
-  let panicCheckTimer = null;
-
   // ----- Helpers -----
+  const on = (el, evt, fn) => {
+    if (!el) return;
+    el.addEventListener(evt, fn);
+  };
+
   function showToast(msg) {
+    if (!toast || !toastText) return;
     toastText.textContent = msg;
     toast.classList.remove("hidden");
     clearTimeout(showToast._t);
@@ -125,7 +127,6 @@
   }
 
   function getStageInfoRows() {
-    // MUST match stageFromMs()
     return [
       { name: "Unlit", range: "Before Start" },
       { name: "Spark", range: "0–12 hours" },
@@ -176,61 +177,29 @@
   }
 
   function applyFlameVibe(vibe) {
+    // If the flame UI isn't on the page (auth view / new layout), don't crash
+    if (!flameGlow || !flameCore || !flameInner) return;
+
     const vibes = {
-      unlit: {
-        glow: "bg-slate-400/10",
-        core: "bg-gradient-to-br from-slate-300/30 to-slate-200/10",
-        inner: "bg-gradient-to-br from-slate-200/20 to-slate-100/10",
-      },
-      yellow: {
-        glow: "bg-yellow-300/30",
-        core: "bg-gradient-to-br from-yellow-300 to-orange-400",
-        inner: "bg-gradient-to-br from-yellow-200 to-yellow-400",
-      },
-      orange: {
-        glow: "bg-orange-400/35",
-        core: "bg-gradient-to-br from-orange-400 to-red-500",
-        inner: "bg-gradient-to-br from-yellow-300 to-orange-500",
-      },
-      red: {
-        glow: "bg-red-500/40",
-        core: "bg-gradient-to-br from-red-500 to-purple-600",
-        inner: "bg-gradient-to-br from-orange-400 to-red-600",
-      },
-      purple: {
-        glow: "bg-purple-500/40",
-        core: "bg-gradient-to-br from-purple-500 to-indigo-600",
-        inner: "bg-gradient-to-br from-red-400 to-purple-600",
-      },
-      blue: {
-        glow: "bg-cyan-400/35",
-        core: "bg-gradient-to-br from-cyan-300 to-blue-500",
-        inner: "bg-gradient-to-br from-sky-200 to-cyan-400",
-      },
-      green: {
-        glow: "bg-green-500/40",
-        core: "bg-gradient-to-br from-green-400 to-lime-500",
-        inner: "bg-gradient-to-br from-lime-200 to-green-600",
-      },
-      pink: {
-        glow: "bg-fuchsia-400/45",
-        core: "bg-gradient-to-br from-pink-300 via-fuchsia-500 to-purple-600",
-        inner: "bg-gradient-to-br from-pink-100 to-fuchsia-400",
-      },
+      unlit: { glow: "bg-slate-400/10", core: "bg-gradient-to-br from-slate-300/30 to-slate-200/10", inner: "bg-gradient-to-br from-slate-200/20 to-slate-100/10" },
+      yellow: { glow: "bg-yellow-300/30", core: "bg-gradient-to-br from-yellow-300 to-orange-400", inner: "bg-gradient-to-br from-yellow-200 to-yellow-400" },
+      orange: { glow: "bg-orange-400/35", core: "bg-gradient-to-br from-orange-400 to-red-500", inner: "bg-gradient-to-br from-yellow-300 to-orange-500" },
+      red: { glow: "bg-red-500/40", core: "bg-gradient-to-br from-red-500 to-purple-600", inner: "bg-gradient-to-br from-orange-400 to-red-600" },
+      purple: { glow: "bg-purple-500/40", core: "bg-gradient-to-br from-purple-500 to-indigo-600", inner: "bg-gradient-to-br from-red-400 to-purple-600" },
+      blue: { glow: "bg-cyan-400/35", core: "bg-gradient-to-br from-cyan-300 to-blue-500", inner: "bg-gradient-to-br from-sky-200 to-cyan-400" },
+      green: { glow: "bg-green-500/40", core: "bg-gradient-to-br from-green-400 to-lime-500", inner: "bg-gradient-to-br from-lime-200 to-green-600" },
+      pink: { glow: "bg-fuchsia-400/45", core: "bg-gradient-to-br from-pink-300 via-fuchsia-500 to-purple-600", inner: "bg-gradient-to-br from-pink-100 to-fuchsia-400" },
     };
 
     const v = vibes[vibe] || vibes.unlit;
 
-    // Keep positioning/sizing classes from HTML; only swap background/gradient classes.
     const clearBgClasses = (el) => {
-      if (!el) return;
       [...el.classList].forEach((c) => {
         if (
           c.startsWith("bg-") ||
           c.startsWith("from-") ||
           c.startsWith("to-") ||
           c.startsWith("via-") ||
-          c.startsWith("text-") ||
           c === "bg-gradient-to-br" ||
           c === "bg-gradient-to-b" ||
           c === "bg-gradient-to-t" ||
@@ -243,54 +212,13 @@
     };
 
     const applyClasses = (el, classStr) => {
-      if (!el) return;
       clearBgClasses(el);
-      classStr
-        .split(/\s+/)
-        .filter(Boolean)
-        .forEach((c) => el.classList.add(c));
+      classStr.split(/\s+/).filter(Boolean).forEach((c) => el.classList.add(c));
     };
 
     applyClasses(flameGlow, v.glow);
     applyClasses(flameCore, v.core);
     applyClasses(flameInner, v.inner);
-  }
-
-  function setView(isAuthed) {
-    viewAuth.classList.toggle("hidden", isAuthed);
-    viewApp.classList.toggle("hidden", !isAuthed);
-    btnSignOut.classList.toggle("hidden", !isAuthed);
-    userEmail.classList.toggle("hidden", !isAuthed);
-
-    // Achievements button only when authed
-    if (btnAchievements) btnAchievements.classList.toggle("hidden", !isAuthed);
-
-
-    
-    if (!isAuthed) {
-      userEmail.textContent = "";
-      stopTimer();
-      startedAt = null;
-      renderFlame();
-      diaryList.innerHTML = "";
-      stopPanicTracking();
-
-      achievements = {};
-      achievementsDirty = false;
-      failCount = 0;
-
-      renderAchievementsUI();
-      closeAchievements();
-    }
-  }
-
-  function stopPanicTracking() {
-    panicStartedAtMs = null;
-
-    if (panicCheckTimer) {
-      clearInterval(panicCheckTimer);
-      panicCheckTimer = null;
-    }
   }
 
   function stopTimer() {
@@ -302,12 +230,15 @@
     stopTimer();
     timer = setInterval(() => {
       renderFlame();
-      evaluateTimeBasedAchievements(); // keep checking streak achievements
+      evaluateTimeBasedAchievements().catch(() => {});
     }, 1000);
     renderFlame();
   }
 
   function renderFlame() {
+    // If flame UI isn't on the page, don't crash
+    if (!flameStageEl || !elapsedEl || !startedAtEl) return;
+
     if (!startedAt) {
       flameStageEl.textContent = "Unlit";
       elapsedEl.textContent = "—";
@@ -318,12 +249,12 @@
 
     const ms = Date.now() - startedAt.getTime();
     const stage = stageFromMs(ms);
+
     flameStageEl.textContent = stage.name;
     elapsedEl.textContent = fmtDuration(ms);
     startedAtEl.textContent = `Started: ${startedAt.toLocaleString()}`;
     applyFlameVibe(stage.vibe);
 
-    // Keep the flame info modal in sync if it's open
     if (flameInfoModal && !flameInfoModal.classList.contains("hidden")) {
       renderFlameInfo();
     }
@@ -336,6 +267,31 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function setView(isAuthed) {
+    if (viewAuth) viewAuth.classList.toggle("hidden", isAuthed);
+    if (viewApp) viewApp.classList.toggle("hidden", !isAuthed);
+    if (btnSignOut) btnSignOut.classList.toggle("hidden", !isAuthed);
+    if (userEmail) userEmail.classList.toggle("hidden", !isAuthed);
+    if (btnAchievements) btnAchievements.classList.toggle("hidden", !isAuthed);
+
+    if (!isAuthed) {
+      if (userEmail) userEmail.textContent = "";
+      stopTimer();
+      startedAt = null;
+      renderFlame();
+
+      if (diaryList) diaryList.innerHTML = "";
+
+      achievements = {};
+      achievementsDirty = false;
+      failCount = 0;
+
+      renderAchievementsUI();
+      closeAchievements();
+      closeFlameInfo();
+    }
   }
 
   // ----- Achievements helpers -----
@@ -365,14 +321,14 @@
 
     achievementsDirty = true;
     renderAchievementsUI();
-
     showToast(`Achievement unlocked: ${ACH[key].title} (remember to save)`);
   }
 
   function renderAchievementsUI() {
-    if (!document.querySelectorAll) return;
+    const nodes = document.querySelectorAll?.(".achievement");
+    if (!nodes) return;
 
-    document.querySelectorAll(".achievement").forEach((el) => {
+    nodes.forEach((el) => {
       const key = el.getAttribute("data-key");
       const unlocked = isUnlocked(key);
       const unlockedAt = achievements?.[key]?.unlocked_at;
@@ -383,12 +339,11 @@
       el.classList.toggle("border-orange-400/30", unlocked);
       el.classList.toggle("bg-orange-500/10", unlocked);
 
-      // Icon + meta (be tolerant to different HTML structures)
       const icon =
         el.querySelector(".achIcon") ||
         el.querySelector("[data-ach-icon]") ||
-        el.querySelector(".text-xs") ||
-        el.querySelector(".text-sm");
+        el.querySelector(".text-xs");
+
       if (icon) icon.textContent = unlocked ? "✅" : "🔒";
 
       const meta = el.querySelector(".achMeta") || el.querySelector("[data-ach-meta]");
@@ -422,14 +377,9 @@
 
   async function saveAchievementsNow() {
     if (!sessionUser) return;
-
     await ensureProfileRow();
 
-    const { error } = await supa
-      .from("profiles")
-      .update({ achievements })
-      .eq("id", sessionUser.id);
-
+    const { error } = await supa.from("profiles").update({ achievements }).eq("id", sessionUser.id);
     if (error) throw error;
 
     achievementsDirty = false;
@@ -439,11 +389,8 @@
 
   // ----- Supabase calls -----
   async function ensureProfileRow() {
-    // Ensure row exists, but DON'T overwrite achievements/fail_count.
-    const { error } = await supa
-      .from("profiles")
-      .upsert({ id: sessionUser.id }, { onConflict: "id" });
-
+    if (!sessionUser) return;
+    const { error } = await supa.from("profiles").upsert({ id: sessionUser.id }, { onConflict: "id" });
     if (error) throw error;
   }
 
@@ -465,7 +412,6 @@
 
     renderAchievementsUI();
     startTimer();
-
     await evaluateTimeBasedAchievements(true);
   }
 
@@ -480,10 +426,8 @@
       .single();
 
     if (error) throw error;
+
     startedAt = data?.started_at ? new Date(data.started_at) : null;
-
-    stopPanicTracking();
-
     renderFlame();
     await evaluateTimeBasedAchievements(true);
   }
@@ -491,11 +435,7 @@
   async function incrementFailCountAndSave() {
     failCount = (failCount || 0) + 1;
 
-    const { error } = await supa
-      .from("profiles")
-      .update({ fail_count: failCount })
-      .eq("id", sessionUser.id);
-
+    const { error } = await supa.from("profiles").update({ fail_count: failCount }).eq("id", sessionUser.id);
     if (error) throw error;
 
     if (failCount >= 1) await unlockAchievement("part_of_process");
@@ -509,20 +449,14 @@
     const d = ms / 86400000;
     const h = ms / 3600000;
 
-    if (force || (!isUnlocked("grower") && h >= 12)) {
-      if (h >= 12) await unlockAchievement("grower");
-    }
-
-    if (force || (!isUnlocked("month_clean") && d >= 30)) {
-      if (d >= 30) await unlockAchievement("month_clean");
-    }
-
-    if (force || (!isUnlocked("stronger_than_ever") && d >= 60)) {
-      if (d >= 60) await unlockAchievement("stronger_than_ever");
-    }
+    if ((force || !isUnlocked("grower")) && h >= 12) await unlockAchievement("grower");
+    if ((force || !isUnlocked("month_clean")) && d >= 30) await unlockAchievement("month_clean");
+    if ((force || !isUnlocked("stronger_than_ever")) && d >= 60) await unlockAchievement("stronger_than_ever");
   }
 
   async function loadDiary() {
+    if (!diaryList) return;
+
     const { data, error } = await supa
       .from("diary_entries")
       .select("id, created_at, text")
@@ -578,10 +512,7 @@
   }
 
   async function addDiaryEntry(text) {
-    const { error } = await supa
-      .from("diary_entries")
-      .insert({ user_id: sessionUser.id, text });
-
+    const { error } = await supa.from("diary_entries").insert({ user_id: sessionUser.id, text });
     if (error) throw error;
   }
 
@@ -592,7 +523,7 @@
 
     if (sessionUser) {
       setView(true);
-      userEmail.textContent = sessionUser.email;
+      if (userEmail) userEmail.textContent = sessionUser.email;
       await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
       await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
     } else {
@@ -604,7 +535,7 @@
 
       if (sessionUser) {
         setView(true);
-        userEmail.textContent = sessionUser.email;
+        if (userEmail) userEmail.textContent = sessionUser.email;
         await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
         await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
       } else {
@@ -614,25 +545,15 @@
   }
 
   // ----- UI events -----
-  // Safe event binding (prevents crashes if a button is missing in a new UI)
-  const on = (el, evt, fn) => {
-    if (!el) return;
-    el.addEventListener(evt, fn);
-  };
-
-  on(btnDemoFill, "click", () => {
-    window.location.href = "./demo.html";
-  });
+  on(btnDemoFill, "click", () => (window.location.href = "./demo.html"));
 
   on(btnSignup, "click", async () => {
     try {
       setBusy(btnSignup, true);
-      const email = emailEl.value.trim();
-      const password = passEl.value;
-
+      const email = (emailEl?.value || "").trim();
+      const password = passEl?.value || "";
       const { error } = await supa.auth.signUp({ email, password });
       if (error) throw error;
-
       showToast("Signed up. You can log in now.");
     } catch (e) {
       showToast(`Signup failed: ${e.message}`);
@@ -644,12 +565,10 @@
   on(btnLogin, "click", async () => {
     try {
       setBusy(btnLogin, true);
-      const email = emailEl.value.trim();
-      const password = passEl.value;
-
+      const email = (emailEl?.value || "").trim();
+      const password = passEl?.value || "";
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
       showToast("Welcome back.");
     } catch (e) {
       showToast(`Login failed: ${e.message}`);
@@ -658,7 +577,6 @@
     }
   });
 
-  // ✅ SINGLE sign-out handler
   on(btnSignOut, "click", async () => {
     try {
       setBusy(btnSignOut, true);
@@ -688,11 +606,8 @@
   on(btnFailed, "click", async () => {
     try {
       setBusy(btnFailed, true);
-
-      stopPanicTracking();
       await incrementFailCountAndSave();
       await setStartedNow();
-
       showToast("Its ok to fail, start again :)");
     } catch (e) {
       showToast(`Reset failed: ${e.message}`);
@@ -702,10 +617,10 @@
   });
 
   on(btnPanic, "click", async () => {
-    panicModal.classList.remove("hidden");
-    panicModal.classList.add("flex");
-
-    // New behavior: instant achievement on pressing PANIC (keeps the same Supabase key)
+    if (panicModal) {
+      panicModal.classList.remove("hidden");
+      panicModal.classList.add("flex");
+    }
     try {
       await unlockAchievement("self_control");
     } catch (e) {
@@ -714,22 +629,24 @@
   });
 
   on(btnClosePanic, "click", () => {
+    if (!panicModal) return;
     panicModal.classList.add("hidden");
     panicModal.classList.remove("flex");
   });
 
   on(btnClearText, "click", () => {
+    if (!diaryText) return;
     diaryText.value = "";
     diaryText.focus();
   });
 
   on(btnAddEntry, "click", async () => {
-    const text = diaryText.value.trim();
+    const text = (diaryText?.value || "").trim();
     if (!text) return showToast("Write something first.");
     try {
       setBusy(btnAddEntry, true);
       await addDiaryEntry(text);
-      diaryText.value = "";
+      if (diaryText) diaryText.value = "";
       showToast("Entry saved.");
       await loadDiary();
     } catch (e) {
@@ -751,21 +668,25 @@
     }
   });
 
-  // Achievements UI wiring
+  // Achievements wiring
   on(btnAchievements, "click", openAchievements);
   on(btnCloseAchievements, "click", closeAchievements);
   on(achievementsBackdrop, "click", closeAchievements);
 
-  // Flame info modal wiring
+  // Flame info wiring
   on(btnFlameInfo, "click", openFlameInfo);
   on(btnCloseFlameInfo, "click", closeFlameInfo);
   on(flameInfoBackdrop, "click", closeFlameInfo);
 
-  // ESC to close flame info (and achievements if open)
+  // ESC closes modals
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     closeFlameInfo();
     closeAchievements();
+    if (panicModal && !panicModal.classList.contains("hidden")) {
+      panicModal.classList.add("hidden");
+      panicModal.classList.remove("flex");
+    }
   });
 
   on(btnSaveAchievements, "click", async () => {
