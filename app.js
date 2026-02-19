@@ -77,6 +77,7 @@
   let achievements = {};
   let achievementsDirty = false;
   let failCount = 0;
+  let bestStageName = "Unlit";
 
   // ----- Helpers -----
   const on = (el, evt, fn) => {
@@ -126,34 +127,57 @@
     return { name: "Rose Flame", vibe: "pink" };
   }
 
-  function getStageInfoRows() {
-    return [
-      { name: "Unlit", range: "Before Start" },
-      { name: "Spark", range: "0–12 hours" },
-      { name: "Growing", range: "12–48 hours" },
-      { name: "Ruby Flame", range: "2–7 days" },
-      { name: "Amethyst Flame", range: "7–21 days" },
-      { name: "Diamond Flame", range: "21–30 days" },
-      { name: "Emerald Flame", range: "30–60 days" },
-      { name: "Rose Flame", range: "60+ days" },
-    ];
-  }
-
+function getStageInfoRows() {
+  return [
+    { name: "Unlit", range: "Before Start", order: 0 },
+    { name: "Spark", range: "0–12 hours", order: 1 },
+    { name: "Growing", range: "12–48 hours", order: 2 },
+    { name: "Ruby Flame", range: "2–7 days", order: 3 },
+    { name: "Amethyst Flame", range: "7–21 days", order: 4 },
+    { name: "Diamond Flame", range: "21–30 days", order: 5 },
+    { name: "Emerald Flame", range: "30–60 days", order: 6 },
+    { name: "Rose Flame", range: "60+ days", order: 7 },
+  ];
+}
   function renderFlameInfo() {
     if (!flameInfoList) return;
+
+    const rows = getStageInfoRows();
 
     const currentStageName = startedAt
       ? stageFromMs(Date.now() - startedAt.getTime()).name
       : "Unlit";
 
-    flameInfoList.innerHTML = getStageInfoRows()
+    const currentOrder =
+      rows.find((r) => r.name === currentStageName)?.order ?? 0;
+
+    const bestOrder =
+      rows.find((r) => r.name === bestStageName)?.order ?? 0;
+
+    flameInfoList.innerHTML = rows
       .map((r) => {
         const isCurrent = r.name === currentStageName;
+        const isBest = r.name === bestStageName;
+
         return `
-          <div class="rounded-2xl border border-white/10 ${isCurrent ? "bg-white/10" : "bg-white/5"} p-3">
+          <div class="rounded-2xl border border-white/10 ${
+            isCurrent ? "bg-white/10" : "bg-white/5"
+          } p-3">
             <div class="flex items-center justify-between gap-3">
-              <div class="font-bold ${isCurrent ? "text-white" : "text-white/90"}">
-                ${r.name}${isCurrent ? ' <span class="text-xs text-orange-300/90">(current)</span>' : ""}
+              <div class="font-bold ${
+                isCurrent ? "text-white" : "text-white/90"
+              }">
+                ${r.name}
+                ${
+                  isCurrent
+                    ? ' <span class="text-xs text-orange-300/90">(current)</span>'
+                    : ""
+                }
+                ${
+                  isBest
+                    ? ' <span class="text-xs text-pink-300/90">(best)</span>'
+                    : ""
+                }
               </div>
               <div class="text-xs text-white/60">${r.range}</div>
             </div>
@@ -249,6 +273,25 @@
 
     const ms = Date.now() - startedAt.getTime();
     const stage = stageFromMs(ms);
+
+    // Update best stage automatically (Rose is highest)
+    const rows = getStageInfoRows();
+    const currentOrder =
+      rows.find((r) => r.name === stage.name)?.order ?? 0;
+    const bestOrder =
+      rows.find((r) => r.name === bestStageName)?.order ?? 0;
+
+    if (currentOrder > bestOrder) {
+      bestStageName = stage.name;
+
+      // Save to Supabase (fire and forget)
+      if (sessionUser) {
+        supa
+          .from("profiles")
+          .update({ best_stage: bestStageName })
+          .eq("id", sessionUser.id);
+      }
+    }
 
     flameStageEl.textContent = stage.name;
     elapsedEl.textContent = fmtDuration(ms);
@@ -399,7 +442,7 @@
 
     const { data, error } = await supa
       .from("profiles")
-      .select("started_at, achievements, fail_count")
+      .select("started_at, achievements, fail_count, best_stage")
       .eq("id", sessionUser.id)
       .single();
 
@@ -408,6 +451,7 @@
     startedAt = data?.started_at ? new Date(data.started_at) : null;
     achievements = data?.achievements || {};
     failCount = Number.isFinite(data?.fail_count) ? data.fail_count : 0;
+    bestStageName = data?.best_stage || "Unlit";
     achievementsDirty = false;
 
     renderAchievementsUI();
