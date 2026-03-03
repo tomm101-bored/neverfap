@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delete Account • NeverFap</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            boxShadow: {
+              glow: "0 0 0 1px rgba(255,255,255,0.08), 0 0 28px rgba(251,146,60,0.20)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="icon" type="image/png" href="./neverfapsmall.png" />
+    <link rel="apple-touch-icon" href="./neverfapsmall.png" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+  </head>
+
+  <body class="min-h-screen text-white antialiased">
+    <!-- Background -->
+    <div class="fixed inset-0 -z-10">
+      <div class="absolute inset-0 bg-gradient-to-b from-[#140802] via-[#0f0602] to-[#060301]"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent"></div>
+    </div>
+
+    <main class="mx-auto max-w-6xl px-5 py-10">
+      <header>
+        <a href="./index.html" class="text-sm text-white/70 hover:text-white">← Back</a>
+        <h1 class="mt-4 text-3xl font-extrabold tracking-tight">Delete Account</h1>
+        <p class="mt-2 text-sm text-white/60">
+          Confirm your credentials to generate your deletion code.
+        </p>
+      </header>
+
+      <section class="mt-12 grid gap-10 lg:grid-cols-2 lg:items-start">
+        <!-- LEFT SIDE FORM (swapped) -->
+        <div>
+          <div class="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-glow">
+            <h2 class="text-lg font-bold">Re-enter your credentials</h2>
+
+            <div class="mt-6 space-y-4">
+              <div>
+                <label class="text-sm text-white/70">Email</label>
+                <input
+                  id="delEmail"
+                  type="email"
+                  class="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-orange-400/40 focus:shadow-glow"
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div>
+                <label class="text-sm text-white/70">Password</label>
+                <input
+                  id="delPassword"
+                  type="password"
+                  class="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none transition focus:border-orange-400/40 focus:shadow-glow"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              id="btnConfirmDelete"
+              class="mt-6 w-full rounded-2xl bg-orange-500/85 px-6 py-4 text-sm font-extrabold shadow-glow transition hover:bg-orange-500 active:scale-[0.98]"
+            >
+              Confirm
+            </button>
+
+            <p id="deleteError" class="mt-4 hidden text-sm text-red-300"></p>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE SUCCESS (swapped) -->
+        <div>
+          <div id="successTitle" class="hidden text-4xl font-extrabold text-white">
+            Correct credentials!
+          </div>
+
+          <div id="successSubtitle" class="hidden mt-3 text-sm text-white/60">
+            To delete your account, please send the following 6 digit code to
+            <span class="font-semibold text-white/80">neverfap@tommfr38.com</span>
+          </div>
+
+          <div id="successCode" class="hidden mt-6 text-6xl font-extrabold tracking-tight text-orange-400">
+            ------
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const supa = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+      const emailInput = document.getElementById("delEmail");
+      const passInput = document.getElementById("delPassword");
+      const btn = document.getElementById("btnConfirmDelete");
+      const err = document.getElementById("deleteError");
+
+      const successTitle = document.getElementById("successTitle");
+      const successSubtitle = document.getElementById("successSubtitle");
+      const successCode = document.getElementById("successCode");
+
+      btn.addEventListener("click", async () => {
+        err.classList.add("hidden");
+        err.textContent = "";
+
+        const email = emailInput.value.trim();
+        const password = passInput.value;
+
+        if (!email || !password) {
+          err.textContent = "Enter email and password.";
+          err.classList.remove("hidden");
+          return;
+        }
+
+        const { data, error } = await supa.auth.signInWithPassword({ email, password });
+
+        if (error || !data?.user) {
+          err.textContent = "Invalid credentials.";
+          err.classList.remove("hidden");
+          return;
+        }
+
+        const { data: profile, error: profileErr } = await supa
+          .from("profiles")
+          .select("user_cookie")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileErr || !profile?.user_cookie) {
+          err.textContent = "Could not retrieve deletion code.";
+          err.classList.remove("hidden");
+          return;
+        }
+
+        successTitle.classList.remove("hidden");
+        successSubtitle.classList.remove("hidden");
+        successCode.textContent = profile.user_cookie;
+        successCode.classList.remove("hidden");
+
+        await supa.auth.signOut();
+      });
+    </script>
+  </body>
+</html>
