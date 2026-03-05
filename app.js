@@ -68,6 +68,12 @@
   const btnSaveAchievements = document.getElementById("btnSaveAchievements");
   const achSaveHint = document.getElementById("achSaveHint");
 
+  // Forgot password modal
+  const btnForgotPassword = document.getElementById("btnForgotPassword");
+  const forgotModal = document.getElementById("forgotModal");
+  const forgotBackdrop = document.getElementById("forgotBackdrop");
+  const btnCloseForgot = document.getElementById("btnCloseForgot");
+
   // ----- State -----
   let sessionUser = null;
   let startedAt = null;
@@ -198,6 +204,18 @@ function getStageInfoRows() {
     if (!flameInfoModal) return;
     flameInfoModal.classList.add("hidden");
     flameInfoModal.classList.remove("flex");
+  }
+
+  function openForgotModal() {
+    if (!forgotModal) return;
+    forgotModal.classList.remove("hidden");
+    forgotModal.classList.add("flex");
+  }
+
+  function closeForgotModal() {
+    if (!forgotModal) return;
+    forgotModal.classList.add("hidden");
+    forgotModal.classList.remove("flex");
   }
 
   function applyFlameVibe(vibe) {
@@ -334,6 +352,7 @@ function getStageInfoRows() {
       renderAchievementsUI();
       closeAchievements();
       closeFlameInfo();
+      closeForgotModal();
     }
   }
 
@@ -722,11 +741,17 @@ function getStageInfoRows() {
   on(btnCloseFlameInfo, "click", closeFlameInfo);
   on(flameInfoBackdrop, "click", closeFlameInfo);
 
+  // Forgot password wiring
+  on(btnForgotPassword, "click", openForgotModal);
+  on(btnCloseForgot, "click", closeForgotModal);
+  on(forgotBackdrop, "click", closeForgotModal);
+
   // ESC closes modals
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     closeFlameInfo();
     closeAchievements();
+    closeForgotModal();
     if (panicModal && !panicModal.classList.contains("hidden")) {
       panicModal.classList.add("hidden");
       panicModal.classList.remove("flex");

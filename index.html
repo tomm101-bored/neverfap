@@ -141,15 +141,18 @@
               Sign up
             </button>
 
-            <a
-              href="./delete.html"
-              class="inline-flex items-center justify-center rounded-2xl border border-red-400/20 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 shadow-glow transition hover:bg-red-500/20 active:scale-[0.98]"
-            >
+            <a href="./delete.html"
+              class="inline-flex items-center justify-center rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 shadow-[0_0_30px_rgba(239,68,68,0.28)] transition hover:bg-red-500/20 active:scale-[0.98]">
               Delete my account
             </a>
 
+            <button id="btnForgotPassword"
+              class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
+              Forgot password?
+            </button>
+
             <button id="btnDemoFill"
-              class="ml-auto rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.98]">
+              class="ml-auto rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
               Fill demo
             </button>
           </div>
@@ -409,6 +412,27 @@
           </div>
         </div>
       </section>
+
+      <!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4">
+  <div id="forgotBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
+
+  <div class="relative w-full max-w-xl rounded-3xl border border-white/10 bg-slate-950/70 p-6 shadow-glow backdrop-blur">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0"> 
+        <div class="text-3xl font-extrabold tracking-tight text-white">Please send an email to</div>
+        <div class="mt-3 break-words text-4xl font-extrabold tracking-tight text-orange-400">neverfap@tommfr38.com</div>
+        <div class="mt-4 text-sm text-white/60">With the email you signed up with. Responses range up to 72 hours.</div>
+      </div>
+
+      <button id="btnCloseForgot"
+        class="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
+        type="button">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
 
       <footer class="mt-10 text-center text-xs text-white/40">
         Built by Tomm for a healthier world. Any bugs can be emailed to neverfap@tommfr38.com
