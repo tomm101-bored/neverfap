@@ -57,6 +57,7 @@
 
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toastText");
+  const lastSavedText = document.getElementById("lastSavedText");
 
   // Achievements UI
   const btnAchievements = document.getElementById("btnAchievements");
@@ -78,6 +79,7 @@
   let sessionUser = null;
   let startedAt = null;
   let timer = null;
+  let autosaveTimer = null;
 
   // Achievements state (stored in profiles)
   let achievements = {};
@@ -104,6 +106,62 @@
     btn.disabled = isBusy;
     btn.classList.toggle("opacity-60", isBusy);
     btn.classList.toggle("cursor-not-allowed", isBusy);
+  }
+
+  function updateLastSavedText(date = null) {
+    if (!lastSavedText) return;
+    if (!date) {
+      lastSavedText.textContent = "Last saved --:--:--";
+      return;
+    }
+
+    const hh = String(date.getHours()).padStart(2, "0");
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    const ss = String(date.getSeconds()).padStart(2, "0");
+    lastSavedText.textContent = `Last saved ${hh}:${mm}:${ss}`;
+  }
+
+  function stopAutosave() {
+    if (autosaveTimer) clearInterval(autosaveTimer);
+    autosaveTimer = null;
+  }
+
+  async function saveAllNow(showSavedTime = true) {
+    if (!sessionUser) return;
+
+    await ensureProfileRow();
+
+    const payload = {
+      started_at: startedAt ? startedAt.toISOString() : null,
+      achievements,
+      fail_count: failCount,
+      best_stage: bestStageName,
+    };
+
+    const { error } = await supa
+      .from("profiles")
+      .update(payload)
+      .eq("id", sessionUser.id);
+
+    if (error) throw error;
+
+    achievementsDirty = false;
+    renderAchievementsUI();
+
+    if (showSavedTime) {
+      updateLastSavedText(new Date());
+    }
+  }
+
+  function startAutosave() {
+    stopAutosave();
+    autosaveTimer = setInterval(async () => {
+      try {
+        await saveAllNow(true);
+      } catch (e) {
+        console.error("Autosave failed:", e);
+      }
+    }, 10000);
   }
 
   function fmtDuration(ms) {
@@ -266,6 +324,7 @@ function getStageInfoRows() {
   function stopTimer() {
     if (timer) clearInterval(timer);
     timer = null;
+    stopAutosave();
   }
 
   function startTimer() {
@@ -275,6 +334,7 @@ function getStageInfoRows() {
       evaluateTimeBasedAchievements().catch(() => {});
     }, 1000);
     renderFlame();
+    startAutosave();
   }
 
   function renderFlame() {
@@ -301,14 +361,6 @@ function getStageInfoRows() {
 
     if (currentOrder > bestOrder) {
       bestStageName = stage.name;
-
-      // Save to Supabase (fire and forget)
-      if (sessionUser) {
-        supa
-          .from("profiles")
-          .update({ best_stage: bestStageName })
-          .eq("id", sessionUser.id);
-      }
     }
 
     flameStageEl.textContent = stage.name;
@@ -348,6 +400,8 @@ function getStageInfoRows() {
       achievements = {};
       achievementsDirty = false;
       failCount = 0;
+      bestStageName = "Unlit";
+      updateLastSavedText(null);
 
       renderAchievementsUI();
       closeAchievements();
@@ -439,14 +493,8 @@ function getStageInfoRows() {
 
   async function saveAchievementsNow() {
     if (!sessionUser) return;
-    await ensureProfileRow();
-
-    const { error } = await supa.from("profiles").update({ achievements }).eq("id", sessionUser.id);
-    if (error) throw error;
-
-    achievementsDirty = false;
-    renderAchievementsUI();
-    showToast("Achievements saved ✅");
+    await saveAllNow(true);
+    showToast("Saved ✅");
   }
 
   // ----- Supabase calls -----
@@ -472,6 +520,7 @@ function getStageInfoRows() {
     failCount = Number.isFinite(data?.fail_count) ? data.fail_count : 0;
     bestStageName = data?.best_stage || "Unlit";
     achievementsDirty = false;
+    updateLastSavedText(null);
 
     renderAchievementsUI();
     startTimer();
@@ -586,6 +635,7 @@ function getStageInfoRows() {
 
     if (sessionUser) {
       setView(true);
+      updateLastSavedText(null);
       if (userEmail) userEmail.textContent = sessionUser.email;
       await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
       await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
@@ -598,6 +648,7 @@ function getStageInfoRows() {
 
       if (sessionUser) {
         setView(true);
+        updateLastSavedText(null);
         if (userEmail) userEmail.textContent = sessionUser.email;
         await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
         await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
@@ -643,6 +694,7 @@ function getStageInfoRows() {
   on(btnSignOut, "click", async () => {
     try {
       setBusy(btnSignOut, true);
+      stopAutosave();
       const { error } = await supa.auth.signOut();
       if (error) throw error;
       showToast("Signed out.");
