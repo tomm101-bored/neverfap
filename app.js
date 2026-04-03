@@ -75,11 +75,19 @@
   const forgotBackdrop = document.getElementById("forgotBackdrop");
   const btnCloseForgot = document.getElementById("btnCloseForgot");
 
+  // Global popup modal
+  const globalPopupModal = document.getElementById("globalPopupModal");
+  const globalPopupBackdrop = document.getElementById("globalPopupBackdrop");
+  const globalPopupTitle = document.getElementById("globalPopupTitle");
+  const globalPopupMessage = document.getElementById("globalPopupMessage");
+  const btnCloseGlobalPopup = document.getElementById("btnCloseGlobalPopup");
+
   // ----- State -----
   let sessionUser = null;
   let startedAt = null;
   let timer = null;
   let autosaveTimer = null;
+  let globalPopupTimer = null;
 
   // Achievements state (stored in profiles)
   let achievements = {};
@@ -276,6 +284,55 @@ function getStageInfoRows() {
     forgotModal.classList.remove("flex");
   }
 
+  function openGlobalPopup(title, message) {
+    if (!globalPopupModal) return;
+    if (globalPopupTitle) globalPopupTitle.textContent = title || "Notice";
+    if (globalPopupMessage) globalPopupMessage.textContent = message || "";
+    globalPopupModal.classList.remove("hidden");
+    globalPopupModal.classList.add("flex");
+  }
+
+  function closeGlobalPopup() {
+    if (!globalPopupModal) return;
+    globalPopupModal.classList.add("hidden");
+    globalPopupModal.classList.remove("flex");
+  }
+
+  function stopGlobalPopupChecks() {
+    if (globalPopupTimer) clearInterval(globalPopupTimer);
+    globalPopupTimer = null;
+  }
+
+  async function checkGlobalPopup() {
+    try {
+      const { data, error } = await supa
+        .from("global_popup")
+        .select("is_active, title, message")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        closeGlobalPopup();
+        return;
+      }
+
+      if (data.is_active) {
+        openGlobalPopup(data.title, data.message);
+      } else {
+        closeGlobalPopup();
+      }
+    } catch (e) {
+      console.error("Global popup check failed:", e);
+    }
+  }
+
+  function startGlobalPopupChecks() {
+    stopGlobalPopupChecks();
+    checkGlobalPopup();
+    globalPopupTimer = setInterval(checkGlobalPopup, 10000);
+  }
+
   function applyFlameVibe(vibe) {
     // If the flame UI isn't on the page (auth view / new layout), don't crash
     if (!flameGlow || !flameCore || !flameInner) return;
@@ -325,6 +382,7 @@ function getStageInfoRows() {
     if (timer) clearInterval(timer);
     timer = null;
     stopAutosave();
+    stopGlobalPopupChecks();
   }
 
   function startTimer() {
@@ -335,6 +393,7 @@ function getStageInfoRows() {
     }, 1000);
     renderFlame();
     startAutosave();
+    startGlobalPopupChecks();
   }
 
   function renderFlame() {
@@ -407,6 +466,7 @@ function getStageInfoRows() {
       closeAchievements();
       closeFlameInfo();
       closeForgotModal();
+      closeGlobalPopup();
     }
   }
 
@@ -639,6 +699,7 @@ function getStageInfoRows() {
       if (userEmail) userEmail.textContent = sessionUser.email;
       await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
       await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
+      await checkGlobalPopup();
     } else {
       setView(false);
     }
@@ -652,6 +713,7 @@ function getStageInfoRows() {
         if (userEmail) userEmail.textContent = sessionUser.email;
         await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
         await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
+        await checkGlobalPopup();
       } else {
         setView(false);
       }
@@ -798,12 +860,17 @@ function getStageInfoRows() {
   on(btnCloseForgot, "click", closeForgotModal);
   on(forgotBackdrop, "click", closeForgotModal);
 
+  // Global popup wiring
+  on(btnCloseGlobalPopup, "click", closeGlobalPopup);
+  on(globalPopupBackdrop, "click", closeGlobalPopup);
+
   // ESC closes modals
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     closeFlameInfo();
     closeAchievements();
     closeForgotModal();
+    closeGlobalPopup();
     if (panicModal && !panicModal.classList.contains("hidden")) {
       panicModal.classList.add("hidden");
       panicModal.classList.remove("flex");

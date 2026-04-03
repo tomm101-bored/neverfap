@@ -411,6 +411,28 @@
             </button>
           </div>
         </div>
+        <!-- GLOBAL POPUP MODAL -->
+        <div id="globalPopupModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
+          <div id="globalPopupBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
+
+          <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur">
+            <h3 id="globalPopupTitle" class="text-2xl font-extrabold text-white">
+              Maintenance
+            </h3>
+
+            <p id="globalPopupMessage" class="mt-3 text-sm text-white/70">
+              Maintenance break soon!
+            </p>
+
+            <button
+              id="btnCloseGlobalPopup"
+              class="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10 active:scale-[0.98]"
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- FORGOT PASSWORD MODAL -->
