@@ -88,6 +88,7 @@
   let timer = null;
   let autosaveTimer = null;
   let globalPopupTimer = null;
+  let dismissedGlobalPopupKey = null;
 
   // Achievements state (stored in profiles)
   let achievements = {};
@@ -292,8 +293,15 @@ function getStageInfoRows() {
     globalPopupModal.classList.add("flex");
   }
 
-  function closeGlobalPopup() {
+  function closeGlobalPopup(rememberDismiss = false) {
     if (!globalPopupModal) return;
+
+    if (rememberDismiss) {
+      const currentTitle = globalPopupTitle?.textContent || "";
+      const currentMessage = globalPopupMessage?.textContent || "";
+      dismissedGlobalPopupKey = `${currentTitle}||${currentMessage}`;
+    }
+
     globalPopupModal.classList.add("hidden");
     globalPopupModal.classList.remove("flex");
   }
@@ -313,15 +321,24 @@ function getStageInfoRows() {
 
       if (error) throw error;
       if (!data) {
+        dismissedGlobalPopupKey = null;
         closeGlobalPopup();
         return;
       }
 
-      if (data.is_active) {
-        openGlobalPopup(data.title, data.message);
-      } else {
+      const popupKey = `${data.title || ""}||${data.message || ""}`;
+
+      if (!data.is_active) {
+        dismissedGlobalPopupKey = null;
         closeGlobalPopup();
+        return;
       }
+
+      if (dismissedGlobalPopupKey === popupKey) {
+        return;
+      }
+
+      openGlobalPopup(data.title, data.message);
     } catch (e) {
       console.error("Global popup check failed:", e);
     }
@@ -460,6 +477,7 @@ function getStageInfoRows() {
       achievementsDirty = false;
       failCount = 0;
       bestStageName = "Unlit";
+      dismissedGlobalPopupKey = null;
       updateLastSavedText(null);
 
       renderAchievementsUI();
@@ -861,8 +879,8 @@ function getStageInfoRows() {
   on(forgotBackdrop, "click", closeForgotModal);
 
   // Global popup wiring
-  on(btnCloseGlobalPopup, "click", closeGlobalPopup);
-  on(globalPopupBackdrop, "click", closeGlobalPopup);
+  on(btnCloseGlobalPopup, "click", () => closeGlobalPopup(true));
+  on(globalPopupBackdrop, "click", () => closeGlobalPopup(true));
 
   // ESC closes modals
   document.addEventListener("keydown", (e) => {
@@ -870,7 +888,7 @@ function getStageInfoRows() {
     closeFlameInfo();
     closeAchievements();
     closeForgotModal();
-    closeGlobalPopup();
+    closeGlobalPopup(true);
     if (panicModal && !panicModal.classList.contains("hidden")) {
       panicModal.classList.add("hidden");
       panicModal.classList.remove("flex");
