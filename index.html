@@ -456,11 +456,39 @@
   </div>
 </div>
 
+      <!-- BUG REPORT MODAL -->
+<div id="bugReportModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4">
+  <div id="bugReportBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
+
+  <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 text-center shadow-glow backdrop-blur">
+    <h3 class="text-2xl font-extrabold text-white">Did someone say... bugs?</h3>
+    <p class="mt-3 text-sm text-white/70">To report bugs, press the button below</p>
+
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+      <a href="mailto:neverfap@tommfr38.com"
+        class="inline-flex items-center justify-center rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-extrabold text-white shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
+        Report bugs
+      </a>
+
+      <button id="btnCloseBugReport"
+        class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
+        type="button">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
       <div id="lastSavedText" class="fixed bottom-4 right-4 text-xs italic text-white/35 pointer-events-none">
         Last saved --:--:--
       </div>
       <footer class="mt-10 text-center text-xs text-white/40">
-        Built by Tomm for a healthier world. Any bugs can be emailed to neverfap@tommfr38.com
+        Built by Tomm for a healthier world.
+        <button id="btnBugReport"
+          class="ml-1 underline underline-offset-2 transition hover:text-white/70"
+          type="button">
+          Report bugs by clicking me
+        </button>
       </footer>
     </main>
 

@@ -75,6 +75,12 @@
   const forgotBackdrop = document.getElementById("forgotBackdrop");
   const btnCloseForgot = document.getElementById("btnCloseForgot");
 
+  // Bug report modal
+  const btnBugReport = document.getElementById("btnBugReport");
+  const bugReportModal = document.getElementById("bugReportModal");
+  const bugReportBackdrop = document.getElementById("bugReportBackdrop");
+  const btnCloseBugReport = document.getElementById("btnCloseBugReport");
+
   // Global popup modal
   const globalPopupModal = document.getElementById("globalPopupModal");
   const globalPopupBackdrop = document.getElementById("globalPopupBackdrop");
@@ -285,6 +291,18 @@ function getStageInfoRows() {
     forgotModal.classList.remove("flex");
   }
 
+  function openBugReportModal() {
+    if (!bugReportModal) return;
+    bugReportModal.classList.remove("hidden");
+    bugReportModal.classList.add("flex");
+  }
+
+  function closeBugReportModal() {
+    if (!bugReportModal) return;
+    bugReportModal.classList.add("hidden");
+    bugReportModal.classList.remove("flex");
+  }
+
   function openGlobalPopup(title, message) {
     if (!globalPopupModal) return;
     if (globalPopupTitle) globalPopupTitle.textContent = title || "Notice";
@@ -484,6 +502,7 @@ function getStageInfoRows() {
       closeAchievements();
       closeFlameInfo();
       closeForgotModal();
+      closeBugReportModal();
       closeGlobalPopup();
     }
   }
@@ -878,6 +897,11 @@ function getStageInfoRows() {
   on(btnCloseForgot, "click", closeForgotModal);
   on(forgotBackdrop, "click", closeForgotModal);
 
+  // Bug report wiring
+  on(btnBugReport, "click", openBugReportModal);
+  on(btnCloseBugReport, "click", closeBugReportModal);
+  on(bugReportBackdrop, "click", closeBugReportModal);
+
   // Global popup wiring
   on(btnCloseGlobalPopup, "click", () => closeGlobalPopup(true));
   on(globalPopupBackdrop, "click", () => closeGlobalPopup(true));
@@ -888,6 +912,7 @@ function getStageInfoRows() {
     closeFlameInfo();
     closeAchievements();
     closeForgotModal();
+    closeBugReportModal();
     closeGlobalPopup(true);
     if (panicModal && !panicModal.classList.contains("hidden")) {
       panicModal.classList.add("hidden");
