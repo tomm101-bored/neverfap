@@ -32,8 +32,11 @@
   const elapsedEl = document.getElementById("elapsed");
   const startedAtEl = document.getElementById("startedAt");
   const flameGlow = document.getElementById("flameGlow");
-  const flameCore = document.getElementById("flameCore");
-  const flameInner = document.getElementById("flameInner");
+  const flameSvg = document.getElementById("flameSvg");
+  const outerStop1 = document.getElementById("outerStop1");
+  const outerStop2 = document.getElementById("outerStop2");
+  const innerStop1 = document.getElementById("innerStop1");
+  const innerStop2 = document.getElementById("innerStop2");
 
   // Flame info modal
   const btnFlameInfo = document.getElementById("btnFlameInfo");
@@ -176,7 +179,7 @@
       } catch (e) {
         console.error("Autosave failed:", e);
       }
-    }, 10000);
+    }, 5000);
   }
 
   function fmtDuration(ms) {
@@ -369,48 +372,35 @@ function getStageInfoRows() {
   }
 
   function applyFlameVibe(vibe) {
-    // If the flame UI isn't on the page (auth view / new layout), don't crash
-    if (!flameGlow || !flameCore || !flameInner) return;
+    if (!flameGlow || !outerStop1) return;
 
     const vibes = {
-      unlit: { glow: "bg-slate-400/10", core: "bg-gradient-to-br from-slate-300/30 to-slate-200/10", inner: "bg-gradient-to-br from-slate-200/20 to-slate-100/10" },
-      yellow: { glow: "bg-yellow-300/30", core: "bg-gradient-to-br from-yellow-300 to-orange-400", inner: "bg-gradient-to-br from-yellow-200 to-yellow-400" },
-      orange: { glow: "bg-orange-400/35", core: "bg-gradient-to-br from-orange-400 to-red-500", inner: "bg-gradient-to-br from-yellow-300 to-orange-500" },
-      red: { glow: "bg-red-500/40", core: "bg-gradient-to-br from-red-500 to-purple-600", inner: "bg-gradient-to-br from-orange-400 to-red-600" },
-      purple: { glow: "bg-purple-500/40", core: "bg-gradient-to-br from-purple-500 to-indigo-600", inner: "bg-gradient-to-br from-red-400 to-purple-600" },
-      blue: { glow: "bg-cyan-400/35", core: "bg-gradient-to-br from-cyan-300 to-blue-500", inner: "bg-gradient-to-br from-sky-200 to-cyan-400" },
-      green: { glow: "bg-green-500/40", core: "bg-gradient-to-br from-green-400 to-lime-500", inner: "bg-gradient-to-br from-lime-200 to-green-600" },
-      pink: { glow: "bg-fuchsia-400/45", core: "bg-gradient-to-br from-pink-300 via-fuchsia-500 to-purple-600", inner: "bg-gradient-to-br from-pink-100 to-fuchsia-400" },
+      unlit:  { glow: "bg-slate-400/10",    outer: ["#475569", "#64748b"], inner: ["#94a3b8", "#cbd5e1"], lit: false },
+      yellow: { glow: "bg-yellow-300/30",   outer: ["#f97316", "#fbbf24"], inner: ["#fde047", "#fef9c3"], lit: true },
+      orange: { glow: "bg-orange-400/35",   outer: ["#dc2626", "#f97316"], inner: ["#fb923c", "#fde047"], lit: true },
+      red:    { glow: "bg-red-500/40",      outer: ["#9333ea", "#ef4444"], inner: ["#f87171", "#fca5a5"], lit: true },
+      purple: { glow: "bg-purple-500/40",   outer: ["#6366f1", "#a855f7"], inner: ["#c084fc", "#e9d5ff"], lit: true },
+      blue:   { glow: "bg-cyan-400/35",     outer: ["#2563eb", "#06b6d4"], inner: ["#67e8f9", "#cffafe"], lit: true },
+      green:  { glow: "bg-green-500/40",    outer: ["#16a34a", "#84cc16"], inner: ["#86efac", "#d9f99d"], lit: true },
+      pink:   { glow: "bg-fuchsia-400/45",  outer: ["#a855f7", "#ec4899"], inner: ["#f9a8d4", "#fce7f3"], lit: true },
     };
 
     const v = vibes[vibe] || vibes.unlit;
 
-    const clearBgClasses = (el) => {
-      [...el.classList].forEach((c) => {
-        if (
-          c.startsWith("bg-") ||
-          c.startsWith("from-") ||
-          c.startsWith("to-") ||
-          c.startsWith("via-") ||
-          c === "bg-gradient-to-br" ||
-          c === "bg-gradient-to-b" ||
-          c === "bg-gradient-to-t" ||
-          c === "bg-gradient-to-r" ||
-          c === "bg-gradient-to-l"
-        ) {
-          el.classList.remove(c);
-        }
-      });
-    };
+    // Update glow div background class
+    [...flameGlow.classList].forEach((c) => {
+      if (c.startsWith("bg-")) flameGlow.classList.remove(c);
+    });
+    v.glow.split(/\s+/).filter(Boolean).forEach((c) => flameGlow.classList.add(c));
 
-    const applyClasses = (el, classStr) => {
-      clearBgClasses(el);
-      classStr.split(/\s+/).filter(Boolean).forEach((c) => el.classList.add(c));
-    };
+    // Update SVG gradient stop colors
+    outerStop1.setAttribute("stop-color", v.outer[0]);
+    outerStop2.setAttribute("stop-color", v.outer[1]);
+    innerStop1.setAttribute("stop-color", v.inner[0]);
+    innerStop2.setAttribute("stop-color", v.inner[1]);
 
-    applyClasses(flameGlow, v.glow);
-    applyClasses(flameCore, v.core);
-    applyClasses(flameInner, v.inner);
+    // Flicker animation only when lit
+    if (flameSvg) flameSvg.classList.toggle("flame-flicker", v.lit);
   }
 
   function stopTimer() {
@@ -434,6 +424,20 @@ function getStageInfoRows() {
   function renderFlame() {
     // If flame UI isn't on the page, don't crash
     if (!flameStageEl || !elapsedEl || !startedAtEl) return;
+
+    // Grey out Start when flame is already running; grey out Failed when unlit
+    if (btnStart) {
+      const isLit = !!startedAt;
+      btnStart.disabled = isLit;
+      btnStart.classList.toggle("opacity-40", isLit);
+      btnStart.classList.toggle("cursor-not-allowed", isLit);
+    }
+    if (btnFailed) {
+      const isUnlit = !startedAt;
+      btnFailed.disabled = isUnlit;
+      btnFailed.classList.toggle("opacity-40", isUnlit);
+      btnFailed.classList.toggle("cursor-not-allowed", isUnlit);
+    }
 
     if (!startedAt) {
       flameStageEl.textContent = "Unlit";
@@ -637,8 +641,24 @@ function getStageInfoRows() {
     if (error) throw error;
 
     startedAt = data?.started_at ? new Date(data.started_at) : null;
+    updateLastSavedText(new Date());
     renderFlame();
     await evaluateTimeBasedAchievements(true);
+  }
+
+  async function clearStartedAt() {
+    await ensureProfileRow();
+
+    const { error } = await supa
+      .from("profiles")
+      .update({ started_at: null })
+      .eq("id", sessionUser.id);
+
+    if (error) throw error;
+
+    startedAt = null;
+    updateLastSavedText(new Date());
+    renderFlame();
   }
 
   async function incrementFailCountAndSave() {
@@ -813,7 +833,7 @@ function getStageInfoRows() {
     } catch (e) {
       showToast(`Start failed: ${e.message}`);
     } finally {
-      setBusy(btnStart, false);
+      renderFlame();
     }
   });
 
@@ -821,8 +841,8 @@ function getStageInfoRows() {
     try {
       setBusy(btnFailed, true);
       await incrementFailCountAndSave();
-      await setStartedNow();
-      showToast("Its ok to fail, start again :)");
+      await clearStartedAt();
+      showToast("It's ok to fail. Press Start when you're ready.");
     } catch (e) {
       showToast(`Reset failed: ${e.message}`);
     } finally {
@@ -929,6 +949,13 @@ function getStageInfoRows() {
       console.error(e);
     } finally {
       setBusy(btnSaveAchievements, false);
+    }
+  });
+
+  // Save immediately when the tab becomes visible again (counters browser throttling of intervals)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && sessionUser) {
+      saveAllNow(true).catch((e) => console.error("Visibility save failed:", e));
     }
   });
 
