@@ -52,6 +52,11 @@
   const panicModal = document.getElementById("panicModal");
   const btnClosePanic = document.getElementById("btnClosePanic");
 
+  const confirmFailedModal = document.getElementById("confirmFailedModal");
+  const confirmFailedBackdrop = document.getElementById("confirmFailedBackdrop");
+  const btnConfirmFailed = document.getElementById("btnConfirmFailed");
+  const btnCancelFailed = document.getElementById("btnCancelFailed");
+
   const diaryText = document.getElementById("diaryText");
   const btnAddEntry = document.getElementById("btnAddEntry");
   const btnClearText = document.getElementById("btnClearText");
@@ -282,6 +287,18 @@ function getStageInfoRows() {
     flameInfoModal.classList.remove("flex");
   }
 
+  function openConfirmFailed() {
+    if (!confirmFailedModal) return;
+    confirmFailedModal.classList.remove("hidden");
+    confirmFailedModal.classList.add("flex");
+  }
+
+  function closeConfirmFailed() {
+    if (!confirmFailedModal) return;
+    confirmFailedModal.classList.add("hidden");
+    confirmFailedModal.classList.remove("flex");
+  }
+
   function openForgotModal() {
     if (!forgotModal) return;
     forgotModal.classList.remove("hidden");
@@ -505,6 +522,7 @@ function getStageInfoRows() {
       renderAchievementsUI();
       closeAchievements();
       closeFlameInfo();
+      closeConfirmFailed();
       closeForgotModal();
       closeBugReportModal();
       closeGlobalPopup();
@@ -837,7 +855,10 @@ function getStageInfoRows() {
     }
   });
 
-  on(btnFailed, "click", async () => {
+  on(btnFailed, "click", () => openConfirmFailed());
+
+  on(btnConfirmFailed, "click", async () => {
+    closeConfirmFailed();
     try {
       setBusy(btnFailed, true);
       await incrementFailCountAndSave();
@@ -849,6 +870,9 @@ function getStageInfoRows() {
       setBusy(btnFailed, false);
     }
   });
+
+  on(btnCancelFailed, "click", closeConfirmFailed);
+  on(confirmFailedBackdrop, "click", closeConfirmFailed);
 
   on(btnPanic, "click", async () => {
     if (panicModal) {
@@ -931,6 +955,7 @@ function getStageInfoRows() {
     if (e.key !== "Escape") return;
     closeFlameInfo();
     closeAchievements();
+    closeConfirmFailed();
     closeForgotModal();
     closeBugReportModal();
     closeGlobalPopup(true);

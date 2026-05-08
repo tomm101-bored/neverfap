@@ -437,6 +437,25 @@
             </button>
           </div>
         </div>
+        <!-- Confirm Failed Modal -->
+        <div id="confirmFailedModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+          <div id="confirmFailedBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur"></div>
+          <div class="relative w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
+            <h3 class="text-lg font-bold">Reset your streak?</h3>
+            <p class="mt-2 text-sm text-white/70">This will clear your current flame and add a fail to your count. This can't be undone.</p>
+            <div class="mt-6 flex gap-3">
+              <button id="btnConfirmFailed"
+                class="flex-1 rounded-2xl bg-red-500/70 px-4 py-3 text-sm font-extrabold text-red-100 transition hover:bg-red-500 active:scale-[0.98]">
+                Yes, I failed
+              </button>
+              <button id="btnCancelFailed"
+                class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- GLOBAL POPUP MODAL -->
         <div id="globalPopupModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
           <div id="globalPopupBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
