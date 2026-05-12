@@ -22,14 +22,17 @@
       };
     </script>
 
-    <link rel="icon" type="image/png" href="https://i.imgur.com/nioL0w7.png">
-    <link rel="apple-touch-icon" href="https://i.imgur.com/nioL0w7.png">
+    <link rel="icon" type="image/png" href="./neverfapsmall.png">
+    <link rel="apple-touch-icon" href="./neverfapsmall.png">
 
     <!-- Supabase JS (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- config (URL + anon key) -->
     <script src="./config.js"></script>
+
+    <!-- maintenance mode redirect -->
+    <script src="./maintenance-check.js"></script>
 
     <style>
       @keyframes flicker {
@@ -47,6 +50,47 @@
   </head>
 
   <body class="min-h-screen text-white antialiased">
+
+<!-- Loading Screen -->
+<div id="loadingScreen" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-b from-[#140802] via-[#0f0602] to-[#060301]"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent"></div>
+  <div
+    class="absolute inset-0 opacity-[0.06]"
+    style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22/></filter><rect width=%22100%22 height=%22100%22 filter=%22url(%23n)%22 opacity=%220.4%22/></svg>');"
+  ></div>
+
+  <div class="relative z-10 flex flex-col items-center gap-5 text-center px-4">
+    <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 flame-flicker" style="filter:drop-shadow(0 0 18px rgba(251,146,60,0.5))">
+      <defs>
+        <linearGradient id="lgOuter" x1="40" y1="76" x2="40" y2="4" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#dc2626"/>
+          <stop offset="100%" stop-color="#f97316"/>
+        </linearGradient>
+        <linearGradient id="lgInner" x1="40" y1="66" x2="40" y2="12" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#f97316"/>
+          <stop offset="100%" stop-color="#fde047"/>
+        </linearGradient>
+      </defs>
+      <path d="M40,76 C20,68 8,52 14,34 C18,20 26,10 40,4 C54,10 62,20 66,34 C72,52 60,68 40,76Z" fill="url(#lgOuter)"/>
+      <path d="M40,66 C28,60 22,48 26,36 C30,26 36,18 40,12 C44,18 50,26 54,36 C58,48 52,60 40,66Z" fill="url(#lgInner)" opacity="0.75"/>
+    </svg>
+
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-white">NeverFap</h1>
+      <p class="mt-1 text-xs tracking-[0.3em] uppercase text-white/40">Initializing system</p>
+    </div>
+
+    <div class="w-56 h-px bg-white/10 overflow-hidden rounded-full">
+      <div id="loadingBar" class="h-full bg-orange-400/80 rounded-full" style="width:0%;transition:none"></div>
+    </div>
+  </div>
+
+  <div class="absolute bottom-8 left-0 right-0 text-center space-y-1">
+    <p id="processorText" class="text-xs font-mono text-white/35 tracking-wider">Loading Alpha Processors 0/84</p>
+  </div>
+</div>
+
 <!-- Background -->
 <div class="fixed inset-0 -z-10">
   <!-- Base gradient -->
@@ -77,13 +121,13 @@
 <meta property="og:description" content="Grow your flame by staying clean. Reset if you fail. Private diary. Calm control over time.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tomm101-bored.github.io/neverfap/">
-<meta property="og:image" content="https://i.imgur.com/5rnMblI.png">
+<meta property="og:image" content="./og-image.png">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="NeverFap">
 <meta name="twitter:description" content="A private streak-based tracker for quitting porn. Minimal. Persistent. Yours.">
-<meta name="twitter:image" content="https://dummyimage.com/1200x630/0f172a/f59e0b&text=NeverFap+Flame+Pet">
+<meta name="twitter:image" content="./og-image.png">
 
 <!-- Theme color (browser UI / mobile) -->
 <meta name="theme-color" content="#f59e0b" media="(prefers-color-scheme: light)">
@@ -537,6 +581,45 @@
       </footer>
     </main>
 
+    <script>
+    (function () {
+      var duration = 5000 + Math.random() * 2000; // 5–7 s
+      var start = performance.now();
+      var total = 84;
+      var last = -1;
+      var procEl = document.getElementById('processorText');
+      var barEl  = document.getElementById('loadingBar');
+      var screen = document.getElementById('loadingScreen');
+
+      function tick(now) {
+        var elapsed  = now - start;
+        var progress = Math.min(elapsed / duration, 1);
+        var eased    = 1 - Math.pow(1 - progress, 1.6); // ease-out
+        var count    = Math.floor(eased * total);
+
+        if (count !== last) {
+          last = count;
+          if (procEl) procEl.textContent = 'Loading Alpha Processors ' + count + '/84';
+          if (barEl)  barEl.style.width  = (count / total * 100) + '%';
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          if (procEl) procEl.textContent = 'Loading Alpha Processors 84/84';
+          if (barEl)  barEl.style.width  = '100%';
+          setTimeout(function () {
+            if (!screen) return;
+            screen.style.transition = 'opacity 0.55s ease';
+            screen.style.opacity    = '0';
+            setTimeout(function () { if (screen && screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
+          }, 350);
+        }
+      }
+
+      requestAnimationFrame(tick);
+    })();
+    </script>
     <script src="./app.js"></script>
   </body>
 </html>
