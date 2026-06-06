@@ -211,7 +211,7 @@
     if (d < 21) return { name: "Amethyst Flame", vibe: "purple" };
     if (d < 30) return { name: "Diamond Flame", vibe: "blue" };
     if (d < 60) return { name: "Emerald Flame", vibe: "green" };
-    return { name: "Rose Flame", vibe: "pink" };
+    return { name: "Platinum Flame", vibe: "platinum" };
   }
 
 function getStageInfoRows() {
@@ -223,7 +223,7 @@ function getStageInfoRows() {
     { name: "Amethyst Flame", range: "7–21 days", order: 4 },
     { name: "Diamond Flame", range: "21–30 days", order: 5 },
     { name: "Emerald Flame", range: "30–60 days", order: 6 },
-    { name: "Rose Flame", range: "60+ days", order: 7 },
+    { name: "Platinum Flame", range: "60+ days", order: 7 },
   ];
 }
   function renderFlameInfo() {
@@ -262,7 +262,7 @@ function getStageInfoRows() {
                 }
                 ${
                   isBest
-                    ? ' <span class="text-xs text-pink-300/90">(best)</span>'
+                    ? ' <span class="text-xs text-sky-300/90">(best)</span>'
                     : ""
                 }
               </div>
@@ -399,7 +399,7 @@ function getStageInfoRows() {
       purple: { glow: "bg-purple-500/40",   outer: ["#6366f1", "#a855f7"], inner: ["#c084fc", "#e9d5ff"], lit: true },
       blue:   { glow: "bg-cyan-400/35",     outer: ["#2563eb", "#06b6d4"], inner: ["#67e8f9", "#cffafe"], lit: true },
       green:  { glow: "bg-green-500/40",    outer: ["#16a34a", "#84cc16"], inner: ["#86efac", "#d9f99d"], lit: true },
-      pink:   { glow: "bg-fuchsia-400/45",  outer: ["#a855f7", "#ec4899"], inner: ["#f9a8d4", "#fce7f3"], lit: true },
+      platinum: { glow: "bg-sky-300/40",   outer: ["#7dc3e4", "#86d9fc"], inner: ["#caedff", "#ddf1ff"], lit: true },
     };
 
     const v = vibes[vibe] || vibes.unlit;
@@ -467,7 +467,7 @@ function getStageInfoRows() {
     const ms = Date.now() - startedAt.getTime();
     const stage = stageFromMs(ms);
 
-    // Update best stage automatically (Rose is highest)
+    // Update best stage automatically (Platinum is highest)
     const rows = getStageInfoRows();
     const currentOrder =
       rows.find((r) => r.name === stage.name)?.order ?? 0;
