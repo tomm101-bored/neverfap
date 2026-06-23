@@ -10,6 +10,9 @@
 
     <meta name="theme-color" content="#f59e0b" />
     <link rel="icon" type="image/png" href="./neverfapsmall.png" />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
   </head>
 
   <body class="min-h-screen text-white antialiased">
@@ -55,10 +58,164 @@
       </p>
 
 
+      <!-- Refresh (normal click retries the site; hold 3s for admin bypass) -->
+      <button
+        id="btnRefresh"
+        style="-webkit-touch-callout: none; -webkit-user-select: none; user-select: none;"
+        class="mt-8 rounded-2xl bg-orange-500/85 px-7 py-3 text-sm font-extrabold shadow-[0_0_28px_rgba(251,146,60,0.25)] transition hover:bg-orange-500 active:scale-[0.98]"
+      >
+        Refresh
+      </button>
+
       <!-- Small footer -->
       <p class="mt-10 text-xs text-white/40">
         Thanks for your patience ❤️
       </p>
     </main>
+
+    <!-- ===================== ADMIN BYPASS MODAL ===================== -->
+    <div id="bypassModal" class="fixed inset-0 z-50 hidden items-center justify-center p-5">
+      <div id="bypassBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-sm rounded-3xl border border-white/10 bg-[#140802] p-6 text-left shadow-[0_0_28px_rgba(251,146,60,0.2)]">
+        <h2 class="text-lg font-extrabold">Admin access</h2>
+        <p class="mt-1 text-xs text-white/55">Sign in to bypass the maintenance break.</p>
+
+        <div class="mt-5 space-y-3">
+          <input id="bypassEmail" type="email" placeholder="Email" autocomplete="off"
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
+          <input id="bypassPassword" type="password" placeholder="Password" autocomplete="off"
+            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
+        </div>
+
+        <p id="bypassError" class="mt-3 hidden text-sm text-red-300"></p>
+
+        <div class="mt-5 flex gap-3">
+          <button id="btnBypassLogin"
+            class="flex-1 rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold transition hover:bg-orange-500 active:scale-[0.98]">
+            Enter
+          </button>
+          <button id="btnBypassCancel"
+            class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // Only the admin account may bypass maintenance.
+        var ADMIN_EMAIL = "admin@email.com";
+
+        var supa =
+          window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY
+            ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
+            : null;
+
+        var btn = document.getElementById("btnRefresh");
+        var modal = document.getElementById("bypassModal");
+        var backdrop = document.getElementById("bypassBackdrop");
+        var emailEl = document.getElementById("bypassEmail");
+        var passEl = document.getElementById("bypassPassword");
+        var errEl = document.getElementById("bypassError");
+        var btnLogin = document.getElementById("btnBypassLogin");
+        var btnCancel = document.getElementById("btnBypassCancel");
+
+        function openModal() {
+          errEl.classList.add("hidden");
+          emailEl.value = "";
+          passEl.value = "";
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          emailEl.focus();
+        }
+        function closeModal() {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+
+        // ----- Hold 3s -> admin bypass.  Normal click -> retry the site. -----
+        var HOLD_MS = 3000;
+        var timer = null;
+        var holdFired = false;
+
+        function startHold() {
+          holdFired = false;
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            holdFired = true;
+            openModal();
+          }, HOLD_MS);
+        }
+        function cancelHold() {
+          clearTimeout(timer);
+          timer = null;
+        }
+
+        btn.addEventListener("pointerdown", startHold);
+        btn.addEventListener("pointerup", cancelHold);
+        btn.addEventListener("pointerleave", cancelHold);
+        btn.addEventListener("pointercancel", cancelHold);
+
+        btn.addEventListener("click", function () {
+          if (holdFired) {
+            // a completed hold already opened the modal — don't navigate away
+            holdFired = false;
+            return;
+          }
+          window.location.href = "https://tommfr38.com/neverfap/";
+        });
+
+        // ----- Bypass login -----
+        async function doBypass() {
+          errEl.classList.add("hidden");
+          var email = (emailEl.value || "").trim().toLowerCase();
+          var password = passEl.value || "";
+
+          // Any account other than the admin is rejected outright.
+          if (email !== ADMIN_EMAIL) {
+            errEl.textContent = "Not an admin account.";
+            errEl.classList.remove("hidden");
+            return;
+          }
+          if (!supa) {
+            errEl.textContent = "Auth unavailable. Try again.";
+            errEl.classList.remove("hidden");
+            return;
+          }
+
+          btnLogin.disabled = true;
+          var prev = btnLogin.textContent;
+          btnLogin.textContent = "Checking…";
+          try {
+            var res = await supa.auth.signInWithPassword({ email: email, password: password });
+            if (res.error || !res.data || !res.data.user) {
+              errEl.textContent = "Invalid credentials.";
+              errEl.classList.remove("hidden");
+              return;
+            }
+            // Signed in as the admin — flag the bypass and enter the app.
+            try { sessionStorage.setItem("nf_maint_bypass", "1"); } catch (e) {}
+            window.location.href = "./index.html";
+          } catch (e2) {
+            errEl.textContent = "Invalid credentials.";
+            errEl.classList.remove("hidden");
+          } finally {
+            btnLogin.disabled = false;
+            btnLogin.textContent = prev;
+          }
+        }
+
+        btnLogin.addEventListener("click", doBypass);
+        passEl.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") doBypass();
+        });
+        btnCancel.addEventListener("click", closeModal);
+        backdrop.addEventListener("click", closeModal);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") closeModal();
+        });
+      })();
+    </script>
   </body>
 </html>

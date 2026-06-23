@@ -1,6 +1,12 @@
 (function () {
   if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
 
+  // Admin maintenance bypass: if an admin signed in through the maintenance
+  // page, never redirect them to the maintenance screen for this session.
+  try {
+    if (sessionStorage.getItem('nf_maint_bypass') === '1') return;
+  } catch (e) {}
+
   var html = document.documentElement;
   var prevVisibility = html.style.visibility;
   html.style.visibility = 'hidden';
