@@ -1,1 +1,6 @@
 .DS_Store
+
+# Admin panel — LOCAL ONLY. Never commit or deploy these.
+# admin-config.js holds the Supabase service_role key (full DB access).
+admin.html
+admin-config.js
