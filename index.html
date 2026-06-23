@@ -199,8 +199,7 @@
               Sign up
             </button>
 
-            <a href="./delete.html" id="btnDeleteAccount"
-              style="-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;"
+            <a href="./delete.html"
               class="inline-flex items-center justify-center rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 shadow-[0_0_30px_rgba(239,68,68,0.28)] transition hover:bg-red-500/20 active:scale-[0.98]">
               Delete my account
             </a>
@@ -622,51 +621,25 @@
     })();
     </script>
     <script>
-      // Hold "Delete my account" for 5s to open the local-only admin panel.
-      // admin.html is gitignored, so it only exists on the owner's machine; on
-      // the public site the fetch 404s and we just show a notice. A normal
-      // (short) click still navigates to delete.html as before.
+      // Type the secret word into the password field to open the local-only
+      // admin panel. admin.html is gitignored, so it only exists on the owner's
+      // machine; on the public site the fetch 404s and nothing happens (silent,
+      // so the secret word never reveals that a panel exists).
       (function () {
-        var link = document.getElementById("btnDeleteAccount");
-        if (!link) return;
+        var pass = document.getElementById("password");
+        if (!pass) return;
 
-        var HOLD_MS = 5000;
-        var timer = null;
-        var holdFired = false;
+        var SECRET = "excitedze";
 
-        function startHold() {
-          holdFired = false;
-          clearTimeout(timer);
-          timer = setTimeout(async function () {
-            holdFired = true;
-            try {
-              var res = await fetch("./admin.html", { cache: "no-store" });
-              if (res.ok) {
-                window.location.href = "./admin.html";
-                return;
-              }
-            } catch (e) {}
-            alert("Admin panel is not available on this device.");
-          }, HOLD_MS);
-        }
-
-        function cancelHold() {
-          clearTimeout(timer);
-          timer = null;
-        }
-
-        link.addEventListener("pointerdown", startHold);
-        link.addEventListener("pointerup", cancelHold);
-        link.addEventListener("pointerleave", cancelHold);
-        link.addEventListener("pointercancel", cancelHold);
-
-        // Swallow the click that follows a completed 5s hold so it doesn't also
-        // navigate to delete.html.
-        link.addEventListener("click", function (e) {
-          if (holdFired) {
-            e.preventDefault();
-            holdFired = false;
-          }
+        pass.addEventListener("input", async function () {
+          if (pass.value !== SECRET) return;
+          try {
+            var res = await fetch("./admin.html", { cache: "no-store" });
+            if (res.ok) {
+              pass.value = "";
+              window.location.href = "./admin.html";
+            }
+          } catch (e) {}
         });
       })();
     </script>
