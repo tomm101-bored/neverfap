@@ -137,7 +137,29 @@
       <!-- Header -->
       <header class="flex items-center justify-between gap-4">
         <div>
-          <h1 class="text-2xl font-bold tracking-tight">NeverFap</h1>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold tracking-tight">NeverFap</h1>
+
+            <!-- Clawd celebration: he walks there and back; click him! -->
+            <div id="clawdTrack" class="relative h-8 w-28 select-none" aria-hidden="false">
+              <div id="clawdWalker" class="absolute bottom-0 left-0 will-change-transform">
+                <button id="clawd" type="button" title="Who's this little guy?"
+                  class="block cursor-pointer bg-transparent p-0 outline-none"
+                  aria-label="Clawd">
+                  <svg width="32" height="27" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+                    <!-- Clawd: flat pixel-art body, side arms, four legs -->
+                    <path d="M6 4 H50 V16 H55 V25 H50 V34
+                             H46 V44 H40 V34 H37 V44 H31 V34 H25 V44 H19 V34 H16 V44 H10 V34 H6
+                             V25 H1 V16 H6 Z"
+                          fill="#D0704F"/>
+                    <!-- eyes -->
+                    <rect class="clawdEye" x="14" y="12" width="7" height="8" fill="#141414"/>
+                    <rect class="clawdEye" x="35" y="12" width="7" height="8" fill="#141414"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
           <p class="text-sm text-white/60">Be healthier, never fap.</p>
         </div>
 
@@ -620,6 +642,108 @@
       requestAnimationFrame(tick);
     })();
     </script>
+    <!-- ===================== CLAWD 🦀 ===================== -->
+    <style>
+      /* walk right facing right, then walk back facing left */
+      @keyframes clawdWalk {
+        0%    { transform: translateX(0) scaleX(1); }
+        48%   { transform: translateX(82px) scaleX(1); }
+        50%   { transform: translateX(82px) scaleX(-1); }
+        98%   { transform: translateX(0) scaleX(-1); }
+        100%  { transform: translateX(0) scaleX(1); }
+      }
+      @keyframes clawdScuttle {
+        from { transform: translateY(0); }
+        to   { transform: translateY(-1.5px); }
+      }
+      @keyframes clawdJump {
+        0%   { transform: translateY(0) scale(1, 1); }
+        30%  { transform: translateY(-13px) scale(0.92, 1.08); }
+        60%  { transform: translateY(0) scale(1.06, 0.94); }
+        80%  { transform: translateY(-4px) scale(1, 1); }
+        100% { transform: translateY(0) scale(1, 1); }
+      }
+      #clawdWalker { animation: clawdWalk 9s linear infinite; }
+      #clawd { animation: clawdScuttle 0.18s ease-in-out infinite alternate; }
+      #clawd.clawd-jump { animation: clawdJump 0.55s ease; }
+      /* eyes squint to a line mid-jump, reopen on landing */
+      #clawd .clawdEye {
+        transform-box: fill-box;
+        transform-origin: center;
+        transition: transform 0.12s ease;
+      }
+      #clawd.clawd-jump .clawdEye { transform: scaleY(0.25); }
+      @media (prefers-reduced-motion: reduce) {
+        #clawdWalker, #clawd { animation: none; }
+      }
+    </style>
+
+    <!-- Clawd popup -->
+    <div id="clawdModal" class="fixed inset-0 z-50 hidden items-center justify-center p-5">
+      <div id="clawdBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-sm rounded-3xl border border-orange-400/20 bg-[#140802] p-6 text-left shadow-glow">
+        <svg width="64" height="55" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges" aria-hidden="true">
+          <path d="M6 4 H50 V16 H55 V25 H50 V34
+                   H46 V44 H40 V34 H37 V44 H31 V34 H25 V44 H19 V34 H16 V44 H10 V34 H6
+                   V25 H1 V16 H6 Z"
+                fill="#D0704F"/>
+          <rect x="14" y="12" width="7" height="8" fill="#141414"/>
+          <rect x="35" y="12" width="7" height="8" fill="#141414"/>
+        </svg>
+        <h2 class="mt-3 text-lg font-extrabold">That's Clawd!</h2>
+        <p class="mt-2 text-sm text-white/70">
+          Clawd is the tiny crab mascot of <span class="font-semibold text-white/90">Claude Code</span>,
+          the Anthropic AI that helps build and maintain NeverFap behind the scenes.
+        </p>
+        <p class="mt-3 text-sm text-white/70">
+          He's scuttling around the header as a little celebration —
+          <span class="font-semibold text-orange-300">Fable</span>, the newest Claude model, is back.
+          Give him a click whenever; he likes the attention.
+        </p>
+        <button id="btnCloseClawd"
+          class="mt-5 w-full rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold shadow-glow transition hover:bg-orange-500 active:scale-[0.98]">
+          Neat 🧡
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Clawd: click -> jump + popup
+      (function () {
+        var clawd = document.getElementById("clawd");
+        var modal = document.getElementById("clawdModal");
+        var backdrop = document.getElementById("clawdBackdrop");
+        var btnClose = document.getElementById("btnCloseClawd");
+        if (!clawd || !modal) return;
+
+        function openModal() {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+        }
+        function closeModal() {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+
+        clawd.addEventListener("click", function () {
+          clawd.classList.remove("clawd-jump");
+          // restart the jump animation even on rapid clicks
+          void clawd.offsetWidth;
+          clawd.classList.add("clawd-jump");
+          setTimeout(openModal, 380);
+        });
+        clawd.addEventListener("animationend", function (e) {
+          if (e.animationName === "clawdJump") clawd.classList.remove("clawd-jump");
+        });
+
+        btnClose.addEventListener("click", closeModal);
+        backdrop.addEventListener("click", closeModal);
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") closeModal();
+        });
+      })();
+    </script>
+
     <script>
       // Type the secret word into the password field to open the local-only
       // admin panel. admin.html is gitignored, so it only exists on the owner's
