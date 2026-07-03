@@ -77,27 +77,47 @@
     <div id="bypassModal" class="fixed inset-0 z-50 hidden items-center justify-center p-5">
       <div id="bypassBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
       <div class="relative w-full max-w-sm rounded-3xl border border-white/10 bg-[#140802] p-6 text-left shadow-[0_0_28px_rgba(251,146,60,0.2)]">
-        <h2 class="text-lg font-extrabold">Admin access</h2>
-        <p class="mt-1 text-xs text-white/55">Sign in to bypass the maintenance break.</p>
+        <!-- Step 1: sign in -->
+        <div id="bypassLoginView">
+          <h2 class="text-lg font-extrabold">Admin access</h2>
+          <p class="mt-1 text-xs text-white/55">Sign in to bypass the maintenance break.</p>
 
-        <div class="mt-5 space-y-3">
-          <input id="bypassEmail" type="email" placeholder="Email" autocomplete="off"
-            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
-          <input id="bypassPassword" type="password" placeholder="Password" autocomplete="off"
-            class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
+          <div class="mt-5 space-y-3">
+            <input id="bypassEmail" type="email" placeholder="Email" autocomplete="off"
+              class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
+            <input id="bypassPassword" type="password" placeholder="Password" autocomplete="off"
+              class="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none focus:border-orange-400/40" />
+          </div>
+
+          <p id="bypassError" class="mt-3 hidden text-sm text-red-300"></p>
+
+          <div class="mt-5 flex gap-3">
+            <button id="btnBypassLogin"
+              class="flex-1 rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold transition hover:bg-orange-500 active:scale-[0.98]">
+              Enter
+            </button>
+            <button id="btnBypassCancel"
+              class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
+              Cancel
+            </button>
+          </div>
         </div>
 
-        <p id="bypassError" class="mt-3 hidden text-sm text-red-300"></p>
+        <!-- Step 2: choose where to go (bypass carried via ?nfbp=1) -->
+        <div id="bypassDestView" class="hidden">
+          <h2 class="text-lg font-extrabold">You're in ✅</h2>
+          <p class="mt-1 text-xs text-white/55">Maintenance bypass active. Where do you want to go?</p>
 
-        <div class="mt-5 flex gap-3">
-          <button id="btnBypassLogin"
-            class="flex-1 rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold transition hover:bg-orange-500 active:scale-[0.98]">
-            Enter
-          </button>
-          <button id="btnBypassCancel"
-            class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
-            Cancel
-          </button>
+          <div class="mt-5 space-y-3">
+            <button id="btnGoLive"
+              class="w-full rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold transition hover:bg-orange-500 active:scale-[0.98]">
+              tommfr38.com
+            </button>
+            <button id="btnGoLocal"
+              class="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/85 transition hover:bg-white/10 active:scale-[0.98]">
+              http://127.0.0.1:5500/
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -120,11 +140,18 @@
         var errEl = document.getElementById("bypassError");
         var btnLogin = document.getElementById("btnBypassLogin");
         var btnCancel = document.getElementById("btnBypassCancel");
+        var loginView = document.getElementById("bypassLoginView");
+        var destView = document.getElementById("bypassDestView");
+        var btnGoLive = document.getElementById("btnGoLive");
+        var btnGoLocal = document.getElementById("btnGoLocal");
 
         function openModal() {
           errEl.classList.add("hidden");
           emailEl.value = "";
           passEl.value = "";
+          // always start on the sign-in step
+          loginView.classList.remove("hidden");
+          destView.classList.add("hidden");
           modal.classList.remove("hidden");
           modal.classList.add("flex");
           emailEl.focus();
@@ -194,9 +221,10 @@
               errEl.classList.remove("hidden");
               return;
             }
-            // Signed in as the admin — flag the bypass and enter the app.
+            // Signed in as the admin — flag the bypass and offer destinations.
             try { sessionStorage.setItem("nf_maint_bypass", "1"); } catch (e) {}
-            window.location.href = "./index.html";
+            loginView.classList.add("hidden");
+            destView.classList.remove("hidden");
           } catch (e2) {
             errEl.textContent = "Invalid credentials.";
             errEl.classList.remove("hidden");
@@ -209,6 +237,15 @@
         btnLogin.addEventListener("click", doBypass);
         passEl.addEventListener("keydown", function (e) {
           if (e.key === "Enter") doBypass();
+        });
+
+        // Destination buttons. The ?nfbp=1 flag carries the bypass across
+        // origins (sessionStorage doesn't cross tommfr38.com <-> 127.0.0.1).
+        btnGoLive.addEventListener("click", function () {
+          window.location.href = "https://tommfr38.com/neverfap/?nfbp=1";
+        });
+        btnGoLocal.addEventListener("click", function () {
+          window.location.href = "http://127.0.0.1:5500/?nfbp=1";
         });
         btnCancel.addEventListener("click", closeModal);
         backdrop.addEventListener("click", closeModal);

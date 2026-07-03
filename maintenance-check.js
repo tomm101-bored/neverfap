@@ -3,7 +3,13 @@
 
   // Admin maintenance bypass: if an admin signed in through the maintenance
   // page, never redirect them to the maintenance screen for this session.
+  // ?nfbp=1 carries the bypass across origins (the destination buttons use it),
+  // then it's stored so it survives further same-origin navigation.
   try {
+    if (new URLSearchParams(window.location.search).get('nfbp') === '1') {
+      sessionStorage.setItem('nf_maint_bypass', '1');
+      return;
+    }
     if (sessionStorage.getItem('nf_maint_bypass') === '1') return;
   } catch (e) {}
 
