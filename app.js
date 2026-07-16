@@ -512,6 +512,9 @@ function getStageInfoRows() {
 
       if (diaryList) diaryList.innerHTML = "";
 
+      const clawdTrack = document.getElementById("clawdTrack");
+      if (clawdTrack) clawdTrack.classList.add("hidden");
+
       achievements = {};
       achievementsDirty = false;
       failCount = 0;
@@ -901,6 +904,12 @@ function getStageInfoRows() {
   on(btnAddEntry, "click", async () => {
     const text = (diaryText?.value || "").trim();
     if (!text) return showToast("Write something first.");
+    if (text.toLowerCase() === "i miss clawd") {
+      const clawdTrack = document.getElementById("clawdTrack");
+      if (clawdTrack) clawdTrack.classList.remove("hidden");
+      diaryText.value = "";
+      return showToast("Clawd scuttles back! 🦀");
+    }
     try {
       setBusy(btnAddEntry, true);
       await addDiaryEntry(text);
