@@ -42,18 +42,18 @@
         🔧
       </div>
 
-      <!-- Title -->
-      <h1 class="text-4xl font-extrabold tracking-tight">
+      <!-- Title (editable via admin panel -> Site Management: maint_title) -->
+      <h1 id="maintTitle" class="text-4xl font-extrabold tracking-tight">
         Maintenance Break!
       </h1>
 
-      <!-- Subtitle -->
-      <p class="mt-4 text-sm text-white/70 max-w-md">
+      <!-- Subtitle (maint_subtitle) -->
+      <p id="maintSubtitle" class="mt-4 text-sm text-white/70 max-w-md">
         NeverFap is offline while there are changes being made that may break the website. We will be back online soon!
       </p>
 
-      <!-- Developer Note -->
-      <p class="mt-4 text-sm text-white/50 max-w-md">
+      <!-- Developer Note (maint_note) -->
+      <p id="maintNote" class="mt-4 text-sm text-white/50 max-w-md">
         I will be back soon!
       </p>
 
@@ -64,11 +64,11 @@
         style="-webkit-touch-callout: none; -webkit-user-select: none; user-select: none;"
         class="mt-8 rounded-2xl bg-orange-500/85 px-7 py-3 text-sm font-extrabold shadow-[0_0_28px_rgba(251,146,60,0.25)] transition hover:bg-orange-500 active:scale-[0.98]"
       >
-        Refresh
+        <span id="maintButtonLabel">Refresh</span>
       </button>
 
-      <!-- Small footer -->
-      <p class="mt-10 text-xs text-white/40">
+      <!-- Small footer (maint_footer) -->
+      <p id="maintFooter" class="mt-10 text-xs text-white/40">
         Thanks for your patience ❤️
       </p>
     </main>
@@ -121,6 +121,42 @@
         </div>
       </div>
     </div>
+
+    <script>
+      // Load editable texts from site_settings (managed in the admin panel's
+      // Site Management tab). Missing/empty values keep the built-in defaults.
+      (function () {
+        if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+
+        fetch(window.SUPABASE_URL + "/rest/v1/site_settings?select=*&id=eq.1", {
+          headers: {
+            apikey: window.SUPABASE_ANON_KEY,
+            Authorization: "Bearer " + window.SUPABASE_ANON_KEY,
+          },
+          cache: "no-store",
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (rows) {
+            var s = rows && rows[0];
+            if (!s) return;
+            var map = {
+              maint_title: "maintTitle",
+              maint_subtitle: "maintSubtitle",
+              maint_note: "maintNote",
+              maint_footer: "maintFooter",
+              maint_button: "maintButtonLabel",
+            };
+            Object.keys(map).forEach(function (col) {
+              var val = s[col];
+              var el = document.getElementById(map[col]);
+              if (el && typeof val === "string" && val.trim() !== "") {
+                el.textContent = val;
+              }
+            });
+          })
+          .catch(function () {});
+      })();
+    </script>
 
     <script>
       (function () {
