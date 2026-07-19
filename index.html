@@ -774,7 +774,7 @@
       var skipBtn     = document.getElementById('btnSkipLoad');
       var finished    = false;
 
-      // 1-in-20 gag: pretend the app fell over instead of finishing the load.
+      // 1-in-20 gag, only ever reachable by pressing Skip (see finish()).
       var willCrash = Math.floor(Math.random() * 20) === 0;
 
       // Tips — one of these three is picked per startup.
@@ -820,7 +820,7 @@
         if (progress < 1) {
           requestAnimationFrame(tick);
         } else {
-          finish();
+          finish(false);
         }
       }
 
@@ -831,7 +831,9 @@
         crashScreen.classList.add('flex');
       }
 
-      function finish() {
+      // viaSkip: the crash gag only fires when the user skipped. Letting the
+      // loader run to the end always loads the app normally.
+      function finish(viaSkip) {
         if (finished) return;
         finished = true;
 
@@ -839,7 +841,7 @@
         if (barEl)  barEl.style.width  = '100%';
 
         setTimeout(function () {
-          if (willCrash) return showCrash();
+          if (willCrash && viaSkip === true) return showCrash();
           if (!screen) return;
           screen.style.transition = 'opacity 0.55s ease';
           screen.style.opacity    = '0';
@@ -847,7 +849,8 @@
         }, 350);
       }
 
-      if (skipBtn) skipBtn.addEventListener('click', finish);
+      // Pass true explicitly — the raw handler would hand finish() a click Event.
+      if (skipBtn) skipBtn.addEventListener('click', function () { finish(true); });
 
       var crashReload = document.getElementById('btnCrashReload');
       if (crashReload) crashReload.addEventListener('click', function () { window.location.reload(); });
