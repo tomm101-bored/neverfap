@@ -16,6 +16,7 @@
             boxShadow: {
               glow: "0 0 0 1px rgba(255,255,255,0.10), 0 0 24px rgba(99,102,241,0.25)",
               glowWarm: "0 0 0 1px rgba(255,255,255,0.10), 0 0 28px rgba(251,146,60,0.25)",
+              glowRed: "0 0 0 1px rgba(255,255,255,0.10), 0 0 28px rgba(239,68,68,0.30)",
             },
           },
         },
@@ -45,6 +46,39 @@
       .flame-flicker {
         animation: flicker 2.4s ease-in-out infinite;
         transform-origin: center bottom;
+      }
+
+      .panic-tab {
+        color: rgba(255,255,255,0.45);
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+      .panic-tab:hover { color: rgba(255,255,255,0.75); }
+      .panic-tab.is-active {
+        color: #fecaca;
+        background: rgba(239,68,68,0.12);
+        border-bottom-color: #ef4444;
+      }
+
+      .hit-check { transition: opacity 0.15s ease; }
+
+      @keyframes hitPop {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.06); }
+        100% { transform: scale(1); }
+      }
+      .hit-pop { animation: hitPop 0.35s ease-out; }
+
+      @keyframes confettiFall {
+        0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+        100% { transform: translate(var(--dx), 120px) rotate(var(--rot)); opacity: 0; }
+      }
+      .confetti-bit {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        animation: confettiFall 1.1s ease-out forwards;
       }
     </style>
   </head>
@@ -84,10 +118,40 @@
     <div class="w-56 h-px bg-white/10 overflow-hidden rounded-full">
       <div id="loadingBar" class="h-full bg-orange-400/80 rounded-full" style="width:0%;transition:none"></div>
     </div>
+
+    <div class="mt-2 h-16 w-full max-w-xs">
+      <div id="loadingTip" class="transition-opacity duration-500" style="opacity:0">
+        <p class="text-[10px] font-semibold uppercase tracking-[0.25em] text-orange-300/70">
+          <span id="loadingTipLabel"></span>
+        </p>
+        <p id="loadingTipText" class="mt-1.5 text-sm leading-snug text-white/60"></p>
+      </div>
+    </div>
+
+    <button id="btnSkipLoad" type="button"
+      class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/80 active:scale-[0.97]">
+      Skip
+    </button>
   </div>
 
   <div class="absolute bottom-8 left-0 right-0 text-center space-y-1">
     <p id="processorText" class="text-xs font-mono text-white/35 tracking-wider">Loading Alpha Processors 0/84</p>
+  </div>
+</div>
+
+<!-- Crash screen (1-in-100 gag on startup) -->
+<div id="crashScreen" class="fixed inset-0 z-[10000] hidden flex-col items-center justify-center px-6 text-center">
+  <div class="absolute inset-0 bg-[#060301]"></div>
+  <div class="relative z-10 flex flex-col items-center gap-5">
+    <div class="text-5xl">💀</div>
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-white">NeverFap has crashed.</h2>
+      <p class="mt-2 text-sm text-white/50">Please reload.</p>
+    </div>
+    <button id="btnCrashReload" type="button"
+      class="rounded-2xl bg-orange-500/80 px-6 py-3 text-sm font-extrabold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
+      Reload
+    </button>
   </div>
 </div>
 
@@ -307,7 +371,7 @@
 
               <button id="btnPanic"
                 class="col-span-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-extrabold text-red-100 shadow-glow transition hover:bg-red-500/15 active:scale-[0.98]">
-                PANIC
+                PANIC - UPDATED
               </button>
             </div>
           </div>
@@ -480,27 +544,118 @@
 
         <!-- Panic Modal -->
         <div id="panicModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/60 backdrop-blur"></div>
-          <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
-            <h3 class="text-lg font-bold text-red-100">Panic Mode</h3>
-            <p class="mt-2 text-sm text-white/70">
-              Okay, try to stay calm, we can stop this.
-            </p>
+          <div class="absolute inset-0 bg-black/70 backdrop-blur"></div>
+          <div class="relative w-full max-w-lg overflow-hidden rounded-3xl border border-red-500/25 bg-[#170708]/90 shadow-glowRed">
 
-            <div class="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-              <div class="font-semibold text-white/80">Right now:</div>
-              <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>Stand up. Change room if you can.</li>
-                <li>Drink water. Cold water helps reset the moment.</li>
-                <li>Do 20 pushups or a 1-minute plank.</li>
-                <li>Open the diary and write the urge out.</li>
-              </ul>
+            <div class="flex items-center justify-between px-6 pt-5">
+              <div>
+                <h3 class="text-lg font-bold text-red-100">Panic Mode</h3>
+                <p class="text-xs text-white/50">Stay with it. The urge passes.</p>
+              </div>
+              <button id="btnClosePanic"
+                class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.96]">
+                Close
+              </button>
             </div>
 
-            <button id="btnClosePanic"
-              class="mt-5 w-full rounded-2xl bg-red-500/70 px-4 py-3 text-sm font-extrabold shadow-glow transition hover:bg-red-500 active:scale-[0.98]">
-              Close
-            </button>
+            <div class="mt-4 flex gap-1 border-b border-white/10 px-6">
+              <button data-panic-tab="breathe"
+                class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
+                BREATHE
+              </button>
+              <button data-panic-tab="challenge"
+                class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
+                CHALLENGE
+              </button>
+              <button data-panic-tab="hits"
+                class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
+                QUICK FIXES
+              </button>
+            </div>
+
+            <div class="max-h-[70vh] overflow-y-auto p-6">
+
+              <!-- Tab 1: Breathe -->
+              <div data-panic-panel="breathe" class="hidden">
+                <div class="flex flex-col items-center">
+                  <div class="relative flex h-56 w-56 items-center justify-center">
+                    <div id="breathGlow"
+                      class="absolute h-40 w-40 rounded-full bg-red-500/25 blur-2xl transition-transform ease-in-out"></div>
+                    <div id="breathRing"
+                      class="absolute h-40 w-40 rounded-full border-2 border-red-400/30 transition-transform ease-in-out"></div>
+                    <div id="breathCircle"
+                      class="absolute h-40 w-40 rounded-full bg-gradient-to-br from-red-500/40 to-rose-700/30 transition-transform ease-in-out"></div>
+                    <div class="relative z-10 text-center">
+                      <div id="breathPhase" class="text-lg font-extrabold tracking-wide text-white">Ready</div>
+                      <div id="breathCount" class="mt-1 text-4xl font-black tabular-nums text-red-200">4</div>
+                    </div>
+                  </div>
+
+                  <p class="mt-2 text-center text-xs text-white/50">
+                    Box breathing. Follow the circle: in 4, hold 4, out 4, hold 4.
+                  </p>
+                  <p id="breathCycles" class="mt-3 text-sm font-semibold text-white/70">Cycles completed: 0</p>
+
+                  <button id="btnBreathToggle"
+                    class="mt-4 w-full rounded-2xl bg-red-500/80 px-4 py-3 text-sm font-extrabold shadow-glowRed transition hover:bg-red-500 active:scale-[0.98]">
+                    Start breathing
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab 2: Challenge -->
+              <div data-panic-panel="challenge" class="hidden">
+                <div id="challengePicker">
+                  <p class="text-sm text-white/70">Pick one. Do it now, not later.</p>
+                  <div id="challengeList" class="mt-4 grid gap-2"></div>
+                </div>
+
+                <div id="challengeRunner" class="hidden text-center">
+                  <div id="challengeName" class="text-sm font-bold text-white/80"></div>
+                  <div class="relative mx-auto mt-4 h-44 w-44">
+                    <svg viewBox="0 0 120 120" class="h-full w-full -rotate-90">
+                      <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+                      <circle id="challengeArc" cx="60" cy="60" r="52" fill="none" stroke="#ef4444" stroke-width="8"
+                        stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                      <div id="challengeTime" class="text-4xl font-black tabular-nums text-white">0:00</div>
+                      <div class="text-[10px] uppercase tracking-[0.2em] text-white/40">remaining</div>
+                    </div>
+                  </div>
+                  <button id="btnChallengeCancel"
+                    class="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.98]">
+                    Give up
+                  </button>
+                </div>
+
+                <div id="challengeDone" class="relative hidden overflow-hidden text-center">
+                  <div class="text-6xl">🔥</div>
+                  <div class="mt-3 text-xl font-black text-red-200">You beat it.</div>
+                  <p class="mt-1 text-sm text-white/60">The urge lost. Your flame is still burning.</p>
+                  <button id="btnChallengeAgain"
+                    class="mt-5 w-full rounded-2xl bg-red-500/80 px-4 py-3 text-sm font-extrabold shadow-glowRed transition hover:bg-red-500 active:scale-[0.98]">
+                    Another one
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab 3: Quick Hits -->
+              <div data-panic-panel="hits" class="hidden">
+                <p class="text-sm text-white/70">Cheap dopamine that costs you nothing. Tap to mark done, tap again to undo.</p>
+                <div id="hitsList" class="mt-4 grid gap-2"></div>
+                <div class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  <div class="font-semibold text-white/80">If nothing works:</div>
+                  <ul class="mt-2 list-disc space-y-1 pl-5">
+                    <li>Leave the room. Go outside, even for 60 seconds.</li>
+                    <li>Put your phone in another room, screen down.</li>
+                    <li>Open the diary and write the urge out in full.</li>
+                    <li>Message someone. Anyone. Break the isolation.</li>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
         <!-- Confirm Failed Modal -->
@@ -613,6 +768,41 @@
       var barEl  = document.getElementById('loadingBar');
       var screen = document.getElementById('loadingScreen');
 
+      var crashScreen = document.getElementById('crashScreen');
+      var skipBtn     = document.getElementById('btnSkipLoad');
+      var finished    = false;
+
+      // 1-in-100 gag: pretend the app fell over instead of finishing the load.
+      var willCrash = Math.floor(Math.random() * 100) === 0;
+
+      // Tips — one of these three is picked per startup.
+      var tips = [
+        {
+          label: 'Panic Mode',
+          text: 'Hit PANIC when an urge lands. Guided breathing, timed challenges and quick fixes are all in there.'
+        },
+        {
+          label: 'The Diary',
+          text: 'Write the urge out. Naming what set it off is how you spot the pattern later.'
+        },
+        {
+          label: 'Restarting Is Fine',
+          text: 'A reset is not a failure. Everyone starts over. What counts is that you start again.'
+        }
+      ];
+
+      var tipBox   = document.getElementById('loadingTip');
+      var tipLabel = document.getElementById('loadingTipLabel');
+      var tipText  = document.getElementById('loadingTipText');
+
+      // One random tip per startup.
+      if (tipBox && tipLabel && tipText) {
+        var tip = tips[Math.floor(Math.random() * tips.length)];
+        tipLabel.textContent = tip.label;
+        tipText.textContent  = tip.text;
+        setTimeout(function () { tipBox.style.opacity = '1'; }, 400);
+      }
+
       function tick(now) {
         var elapsed  = now - start;
         var progress = Math.min(elapsed / duration, 1);
@@ -628,16 +818,37 @@
         if (progress < 1) {
           requestAnimationFrame(tick);
         } else {
-          if (procEl) procEl.textContent = 'Loading Alpha Processors 84/84';
-          if (barEl)  barEl.style.width  = '100%';
-          setTimeout(function () {
-            if (!screen) return;
-            screen.style.transition = 'opacity 0.55s ease';
-            screen.style.opacity    = '0';
-            setTimeout(function () { if (screen && screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
-          }, 350);
+          finish();
         }
       }
+
+      function showCrash() {
+        if (screen && screen.parentNode) screen.parentNode.removeChild(screen);
+        if (!crashScreen) return;
+        crashScreen.classList.remove('hidden');
+        crashScreen.classList.add('flex');
+      }
+
+      function finish() {
+        if (finished) return;
+        finished = true;
+
+        if (procEl) procEl.textContent = 'Loading Alpha Processors 84/84';
+        if (barEl)  barEl.style.width  = '100%';
+
+        setTimeout(function () {
+          if (willCrash) return showCrash();
+          if (!screen) return;
+          screen.style.transition = 'opacity 0.55s ease';
+          screen.style.opacity    = '0';
+          setTimeout(function () { if (screen && screen.parentNode) screen.parentNode.removeChild(screen); }, 600);
+        }, 350);
+      }
+
+      if (skipBtn) skipBtn.addEventListener('click', finish);
+
+      var crashReload = document.getElementById('btnCrashReload');
+      if (crashReload) crashReload.addEventListener('click', function () { window.location.reload(); });
 
       requestAnimationFrame(tick);
     })();

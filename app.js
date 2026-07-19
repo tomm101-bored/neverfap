@@ -877,8 +877,226 @@ function getStageInfoRows() {
   on(btnCancelFailed, "click", closeConfirmFailed);
   on(confirmFailedBackdrop, "click", closeConfirmFailed);
 
+  // ----- Panic mode -----
+  const BREATH_PHASES = [
+    { label: "Breathe in", seconds: 4, scale: 1.35 },
+    { label: "Hold", seconds: 4, scale: 1.35 },
+    { label: "Breathe out", seconds: 4, scale: 0.75 },
+    { label: "Hold", seconds: 4, scale: 0.75 },
+  ];
+
+  const CHALLENGES = [
+    { emoji: "💪", name: "20 pushups", seconds: 60 },
+    { emoji: "🧘", name: "1 minute plank", seconds: 60 },
+    { emoji: "🏃", name: "2 minute sprint in place", seconds: 120 },
+    { emoji: "🚿", name: "30 seconds cold water", seconds: 30 },
+    { emoji: "🪑", name: "40 squats", seconds: 90 },
+    { emoji: "🧊", name: "Sit still, do nothing", seconds: 120 },
+  ];
+
+  const QUICK_HITS = [
+    { emoji: "🥄", text: "Spoon of sugar or honey" },
+    { emoji: "🧊", text: "Cold water on your face" },
+    { emoji: "🎵", text: "Play your loudest song" },
+    { emoji: "🚶", text: "Walk to another room" },
+    { emoji: "☕", text: "Make a hot drink, slowly" },
+    { emoji: "🪟", text: "Open a window, breathe outside air" },
+    { emoji: "🧹", text: "Tidy one small thing" },
+    { emoji: "📞", text: "Text someone you like" },
+  ];
+
+  let breathTimer = null;
+  let breathPhaseIdx = 0;
+  let breathRemaining = 0;
+  let breathCycles = 0;
+  let challengeTimer = null;
+
+  const breathPhaseEl = document.getElementById("breathPhase");
+  const breathCountEl = document.getElementById("breathCount");
+  const breathCyclesEl = document.getElementById("breathCycles");
+  const btnBreathToggle = document.getElementById("btnBreathToggle");
+  const breathVisuals = ["breathCircle", "breathRing", "breathGlow"].map((id) =>
+    document.getElementById(id)
+  );
+
+  const challengePicker = document.getElementById("challengePicker");
+  const challengeRunner = document.getElementById("challengeRunner");
+  const challengeDone = document.getElementById("challengeDone");
+  const challengeListEl = document.getElementById("challengeList");
+  const challengeNameEl = document.getElementById("challengeName");
+  const challengeTimeEl = document.getElementById("challengeTime");
+  const challengeArc = document.getElementById("challengeArc");
+  const hitsListEl = document.getElementById("hitsList");
+
+  const ARC_LENGTH = 326.7;
+
+  function setPanicTab(name) {
+    document.querySelectorAll("[data-panic-tab]").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.panicTab === name);
+    });
+    document.querySelectorAll("[data-panic-panel]").forEach((panel) => {
+      panel.classList.toggle("hidden", panel.dataset.panicPanel !== name);
+    });
+    if (name !== "breathe") stopBreathing();
+    if (name !== "challenge") stopChallenge();
+  }
+
+  function applyBreathVisual(scale, seconds) {
+    breathVisuals.forEach((el) => {
+      if (!el) return;
+      el.style.transitionDuration = `${seconds}s`;
+      el.style.transform = `scale(${scale})`;
+    });
+  }
+
+  function stopBreathing() {
+    clearInterval(breathTimer);
+    breathTimer = null;
+    if (btnBreathToggle) btnBreathToggle.textContent = "Start breathing";
+    if (breathPhaseEl) breathPhaseEl.textContent = "Ready";
+    if (breathCountEl) breathCountEl.textContent = "4";
+    applyBreathVisual(1, 0.4);
+  }
+
+  function enterBreathPhase(idx) {
+    breathPhaseIdx = idx;
+    const phase = BREATH_PHASES[idx];
+    breathRemaining = phase.seconds;
+    if (breathPhaseEl) breathPhaseEl.textContent = phase.label;
+    if (breathCountEl) breathCountEl.textContent = String(phase.seconds);
+    applyBreathVisual(phase.scale, phase.seconds);
+  }
+
+  function startBreathing() {
+    breathCycles = 0;
+    if (breathCyclesEl) breathCyclesEl.textContent = "Cycles completed: 0";
+    if (btnBreathToggle) btnBreathToggle.textContent = "Stop";
+    enterBreathPhase(0);
+    breathTimer = setInterval(() => {
+      breathRemaining -= 1;
+      if (breathRemaining > 0) {
+        if (breathCountEl) breathCountEl.textContent = String(breathRemaining);
+        return;
+      }
+      const next = (breathPhaseIdx + 1) % BREATH_PHASES.length;
+      if (next === 0) {
+        breathCycles += 1;
+        if (breathCyclesEl) breathCyclesEl.textContent = `Cycles completed: ${breathCycles}`;
+      }
+      enterBreathPhase(next);
+    }, 1000);
+  }
+
+  function burstConfetti(host) {
+    if (!host) return;
+    const colors = ["#ef4444", "#dc2626", "#f87171", "#fca5a5", "#fecaca"];
+    for (let i = 0; i < 24; i++) {
+      const bit = document.createElement("div");
+      bit.className = "confetti-bit";
+      bit.style.left = `${50 + (Math.random() - 0.5) * 40}%`;
+      bit.style.top = "20%";
+      bit.style.background = colors[i % colors.length];
+      bit.style.setProperty("--dx", `${(Math.random() - 0.5) * 220}px`);
+      bit.style.setProperty("--rot", `${Math.random() * 720 - 360}deg`);
+      bit.style.animationDelay = `${Math.random() * 0.15}s`;
+      host.appendChild(bit);
+      setTimeout(() => bit.remove(), 1400);
+    }
+  }
+
+  function showChallengeStage(stage) {
+    challengePicker?.classList.toggle("hidden", stage !== "pick");
+    challengeRunner?.classList.toggle("hidden", stage !== "run");
+    challengeDone?.classList.toggle("hidden", stage !== "done");
+  }
+
+  function stopChallenge() {
+    clearInterval(challengeTimer);
+    challengeTimer = null;
+    showChallengeStage("pick");
+  }
+
+  function startChallenge(challenge) {
+    clearInterval(challengeTimer);
+    // Deadline-based so a throttled or backgrounded tab can't stretch the timer.
+    const endsAt = Date.now() + challenge.seconds * 1000;
+    if (challengeNameEl) challengeNameEl.textContent = `${challenge.emoji}  ${challenge.name}`;
+    showChallengeStage("run");
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      const mins = Math.floor(remaining / 60);
+      const secs = remaining % 60;
+      if (challengeTimeEl) challengeTimeEl.textContent = `${mins}:${String(secs).padStart(2, "0")}`;
+      if (challengeArc) {
+        const progress = remaining / challenge.seconds;
+        challengeArc.style.strokeDashoffset = String(ARC_LENGTH * (1 - progress));
+      }
+      if (remaining > 0) return;
+      clearInterval(challengeTimer);
+      challengeTimer = null;
+      showChallengeStage("done");
+      burstConfetti(challengeDone);
+      showToast("Challenge complete. Urge beaten. 🔥");
+    };
+    tick();
+    challengeTimer = setInterval(tick, 250);
+  }
+
+  function buildPanicLists() {
+    if (challengeListEl && !challengeListEl.childElementCount) {
+      CHALLENGES.forEach((c) => {
+        const btn = document.createElement("button");
+        btn.className =
+          "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]";
+        btn.innerHTML = `<span class="text-xl">${c.emoji}</span><span class="flex-1">${c.name}</span><span class="text-xs text-white/40">${
+          c.seconds >= 60 ? `${c.seconds / 60}m` : `${c.seconds}s`
+        }</span>`;
+        btn.addEventListener("click", () => startChallenge(c));
+        challengeListEl.appendChild(btn);
+      });
+    }
+
+    if (hitsListEl && !hitsListEl.childElementCount) {
+      QUICK_HITS.forEach((h) => {
+        const btn = document.createElement("button");
+        btn.className =
+          "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]";
+        btn.innerHTML = `<span class="text-xl">${h.emoji}</span><span class="flex-1">${h.text}</span><span class="hit-check text-red-300" style="opacity:0">✓</span>`;
+        const check = btn.querySelector(".hit-check");
+        let done = false;
+        btn.addEventListener("click", () => {
+          done = !done;
+          // Swap Tailwind utilities directly — a custom class here loses to them.
+          btn.classList.toggle("bg-white/5", !done);
+          btn.classList.toggle("border-white/10", !done);
+          btn.classList.toggle("bg-red-500/15", done);
+          btn.classList.toggle("border-red-500/40", done);
+          btn.classList.toggle("text-white/80", !done);
+          btn.classList.toggle("text-red-100", done);
+          if (check) check.style.opacity = done ? "1" : "0";
+          if (!done) return;
+          btn.classList.remove("hit-pop");
+          void btn.offsetWidth;
+          btn.classList.add("hit-pop");
+        });
+        hitsListEl.appendChild(btn);
+      });
+    }
+  }
+
+  function closePanic() {
+    if (!panicModal) return;
+    stopBreathing();
+    stopChallenge();
+    panicModal.classList.add("hidden");
+    panicModal.classList.remove("flex");
+  }
+
   on(btnPanic, "click", async () => {
     if (panicModal) {
+      buildPanicLists();
+      setPanicTab("breathe");
       panicModal.classList.remove("hidden");
       panicModal.classList.add("flex");
     }
@@ -889,11 +1107,19 @@ function getStageInfoRows() {
     }
   });
 
-  on(btnClosePanic, "click", () => {
-    if (!panicModal) return;
-    panicModal.classList.add("hidden");
-    panicModal.classList.remove("flex");
+  on(btnClosePanic, "click", closePanic);
+
+  document.querySelectorAll("[data-panic-tab]").forEach((btn) => {
+    btn.addEventListener("click", () => setPanicTab(btn.dataset.panicTab));
   });
+
+  on(btnBreathToggle, "click", () => {
+    if (breathTimer) stopBreathing();
+    else startBreathing();
+  });
+
+  on(document.getElementById("btnChallengeCancel"), "click", stopChallenge);
+  on(document.getElementById("btnChallengeAgain"), "click", () => showChallengeStage("pick"));
 
   on(btnClearText, "click", () => {
     if (!diaryText) return;
@@ -968,10 +1194,7 @@ function getStageInfoRows() {
     closeForgotModal();
     closeBugReportModal();
     closeGlobalPopup(true);
-    if (panicModal && !panicModal.classList.contains("hidden")) {
-      panicModal.classList.add("hidden");
-      panicModal.classList.remove("flex");
-    }
+    if (panicModal && !panicModal.classList.contains("hidden")) closePanic();
   });
 
   on(btnSaveAchievements, "click", async () => {
