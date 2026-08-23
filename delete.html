@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Delete Account • NeverFap</title>
+    <title data-i18n="del.pageTitle">Delete Account • NeverFap</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -23,6 +23,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
+    <script src="./i18n.js?v=1"></script>
     <script src="./maintenance-check.js"></script>
   </head>
 
@@ -34,23 +35,28 @@
     </div>
 
     <main class="mx-auto max-w-6xl px-5 py-10">
-      <header>
-        <a href="./index.html" class="text-sm text-white/70 hover:text-white">← Back</a>
-        <h1 class="mt-4 text-3xl font-extrabold tracking-tight">Delete Account</h1>
-        <p class="mt-2 text-sm text-white/60">
-          Confirm your credentials to generate your deletion code.
-        </p>
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <a href="./index.html" data-i18n="del.back" class="text-sm text-white/70 hover:text-white">← Back</a>
+          <h1 data-i18n="del.title" class="mt-4 text-3xl font-extrabold tracking-tight">Delete Account</h1>
+          <p data-i18n="del.sub" class="mt-2 text-sm text-white/60">
+            Confirm your credentials to generate your deletion code.
+          </p>
+        </div>
+
+        <!-- Language picker (i18n.js mounts the select in here) -->
+        <div data-nf-lang class="shrink-0"></div>
       </header>
 
       <section class="mt-12 grid gap-10 lg:grid-cols-2 lg:items-start">
         <!-- LEFT SIDE FORM (swapped) -->
         <div>
           <div class="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-glow">
-            <h2 class="text-lg font-bold">Re-enter your credentials</h2>
+            <h2 data-i18n="del.formTitle" class="text-lg font-bold">Re-enter your credentials</h2>
 
             <div class="mt-6 space-y-4">
               <div>
-                <label class="text-sm text-white/70">Email</label>
+                <label data-i18n="auth.email" class="text-sm text-white/70">Email</label>
                 <input
                   id="delEmail"
                   type="email"
@@ -60,7 +66,7 @@
               </div>
 
               <div>
-                <label class="text-sm text-white/70">Password</label>
+                <label data-i18n="auth.password" class="text-sm text-white/70">Password</label>
                 <input
                   id="delPassword"
                   type="password"
@@ -72,6 +78,7 @@
 
             <button
               id="btnConfirmDelete"
+              data-i18n="del.confirm"
               class="mt-6 w-full rounded-2xl bg-orange-500/85 px-6 py-4 text-sm font-extrabold shadow-glow transition hover:bg-orange-500 active:scale-[0.98]"
             >
               Confirm
@@ -83,12 +90,12 @@
 
         <!-- RIGHT SIDE SUCCESS (swapped) -->
         <div>
-          <div id="successTitle" class="hidden text-4xl font-extrabold text-white">
+          <div id="successTitle" data-i18n="del.okTitle" class="hidden text-4xl font-extrabold text-white">
             Correct credentials!
           </div>
 
           <div id="successSubtitle" class="hidden mt-3 text-sm text-white/60">
-            To delete your account, please send the following 6 digit code to
+            <span data-i18n="del.okSub">To delete your account, please send the following 6 digit code to</span>
             <span class="font-semibold text-white/80">neverfap@tommfr38.com</span>
           </div>
 
@@ -101,6 +108,7 @@
 
     <script>
       const supa = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      const t = (k, params) => (window.NF_I18N ? window.NF_I18N.t(k, params) : k);
 
       const emailInput = document.getElementById("delEmail");
       const passInput = document.getElementById("delPassword");
@@ -119,7 +127,7 @@
         const password = passInput.value;
 
         if (!email || !password) {
-          err.textContent = "Enter email and password.";
+          err.textContent = t("del.errMissing");
           err.classList.remove("hidden");
           return;
         }
@@ -127,7 +135,7 @@
         const { data, error } = await supa.auth.signInWithPassword({ email, password });
 
         if (error || !data?.user) {
-          err.textContent = "Invalid credentials.";
+          err.textContent = t("del.errInvalid");
           err.classList.remove("hidden");
           return;
         }
@@ -139,7 +147,7 @@
           .single();
 
         if (profileErr || !profile?.user_cookie) {
-          err.textContent = "Could not retrieve deletion code.";
+          err.textContent = t("del.errCode");
           err.classList.remove("hidden");
           return;
         }

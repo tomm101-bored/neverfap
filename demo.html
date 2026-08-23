@@ -7,6 +7,7 @@
 
     <!-- maintenance mode redirect -->
     <script src="./config.js"></script>
+    <script src="./i18n.js?v=1"></script>
     <script src="./maintenance-check.js"></script>
 
     <!-- Tailwind (CDN) -->
@@ -92,18 +93,22 @@
 
     <main class="mx-auto max-w-4xl px-4 py-10">
       <!-- Header -->
-      <header class="flex items-center justify-between gap-4">
+      <header class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl font-bold tracking-tight">NeverFap</h1>
-          <p class="text-sm text-white/60">Be healthier, never fap.</p>
+          <p data-i18n="header.tagline" class="text-sm text-white/60">Be healthier, never fap.</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <!-- Language picker (i18n.js mounts the select in here) -->
+          <div data-nf-lang class="flex items-center"></div>
+
           <span id="userEmail" class="text-sm text-white/70 md:inline">demo@email.com</span>
 
           <!-- Achievements button (demo only) -->
           <button
             id="btnAchievements"
+            data-i18n="header.achievements"
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/85 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
             type="button"
           >
@@ -112,6 +117,7 @@
 
           <a
             href="https://tommfr38.github.io/neverfap/"
+            data-i18n="header.signout"
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
           >
             Sign out
@@ -127,20 +133,21 @@
             <div class="flex items-start justify-between gap-4">
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="text-xl font-semibold">Your Flame</h2>
+                  <h2 data-i18n="flame.title" class="text-xl font-semibold">Your Flame</h2>
                   <button
                     id="btnFlameInfo"
                     class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-bold text-white/70 shadow-glow transition hover:bg-white/10 active:scale-[0.95]"
+                    data-i18n-attr="title:flame.infoTitle;aria-label:flame.infoAria"
                     title="Flame stages"
                     aria-label="Flame stages info"
                   >
                     ⓘ
                   </button>
                 </div>
-                <p class="text-sm text-white/60">Your little buddy who grows with time!</p>
+                <p data-i18n="flame.sub" class="text-sm text-white/60">Your little buddy who grows with time!</p>
               </div>
               <div class="rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-white/70">
-                <span id="flameStage">Calm Control</span>
+                <span id="flameStage" data-i18n="demo.stageCalm">Calm Control</span>
               </div>
             </div>
 
@@ -165,17 +172,19 @@
               </div>
 
               <div class="flex-1">
-                <div class="text-sm text-white/60">Time since start</div>
-                <div id="elapsed" class="mt-1 text-2xl font-bold tracking-tight">14d 13h 33m</div>
-                <div id="startedAt" class="mt-1 text-xs text-white/50">Started: 1/4/2026, 16:53:14</div>
+                <div data-i18n="flame.elapsedLabel" class="text-sm text-white/60">Time since start</div>
+                <div id="elapsed" data-i18n="demo.elapsed" class="mt-1 text-2xl font-bold tracking-tight">14d 13h 33m</div>
+                <div id="startedAt" data-i18n="demo.startedAt" class="mt-1 text-xs text-white/50">Started: 1/4/2026, 16:53:14</div>
               </div>
             </div>
 
             <div class="mt-6 grid grid-cols-2 gap-3">
               <button
                 id="btnStart"
+                data-i18n="flame.start"
                 class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 Start
@@ -183,8 +192,10 @@
 
               <button
                 id="btnFailed"
+                data-i18n="flame.failed"
                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/90 shadow-glow transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 I failed
@@ -192,8 +203,10 @@
 
               <button
                 id="btnPanic"
+                data-i18n="flame.panic"
                 class="col-span-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-extrabold text-red-100 shadow-glow transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 PANIC
@@ -205,13 +218,15 @@
           <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow backdrop-blur">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <h2 class="text-xl font-semibold">Diary</h2>
-                <p class="text-sm text-white/60">Private notes. Short is fine.</p>
+                <h2 data-i18n="diary.title" class="text-xl font-semibold">Diary</h2>
+                <p data-i18n="diary.sub" class="text-sm text-white/60">Private notes. Short is fine.</p>
               </div>
               <button
                 id="btnRefreshDiary"
+                data-i18n="diary.refresh"
                 class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 Refresh
@@ -221,6 +236,7 @@
             <textarea
               id="diaryText"
               rows="4"
+              data-i18n="demo.diaryText"
               class="mt-4 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-white/80 outline-none"
               disabled
             >Hello! This is the Demo account which cannot be modified. To get your own account, press sign out and log into your own account!</textarea>
@@ -228,16 +244,20 @@
             <div class="mt-3 flex gap-3">
               <button
                 id="btnAddEntry"
+                data-i18n="diary.add"
                 class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 Add entry
               </button>
               <button
                 id="btnClearText"
+                data-i18n="diary.clear"
                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 transition opacity-50 cursor-not-allowed"
                 disabled
+                data-i18n-attr="title:demo.readonly"
                 title="Demo is read-only"
               >
                 Clear
@@ -245,9 +265,9 @@
             </div>
 
             <div class="mt-6">
-              <div class="mb-2 text-sm font-semibold text-white/70">Recent</div>
+              <div data-i18n="diary.recent" class="mb-2 text-sm font-semibold text-white/70">Recent</div>
               <div id="diaryList" class="max-h-64 space-y-3 overflow-auto pr-1">
-                <div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/60">
+                <div data-i18n="demo.diaryEmpty" class="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/60">
                   Demo account — entries are disabled.
                 </div>
               </div>
@@ -258,6 +278,7 @@
         <!-- iOS button (clickable) -->
         <a
           href="./nfios.html"
+          data-i18n="ios.cta"
           class="mt-6 block w-full rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-center text-sm font-extrabold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.99]"
         >
           Get NeverFap on iOS
@@ -271,12 +292,13 @@
         <div class="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h3 class="text-lg font-bold">Achievements</h3>
-              <p class="mt-1 text-sm text-white/60">Demo preview (read-only).</p>
+              <h3 data-i18n="ach.title" class="text-lg font-bold">Achievements</h3>
+              <p data-i18n="demo.achSub" class="mt-1 text-sm text-white/60">Demo preview (read-only).</p>
             </div>
 
             <button
               id="btnCloseAchievements"
+              data-i18n="ach.close"
               class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]"
               type="button"
             >
@@ -289,9 +311,9 @@
             <div class="achievement rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4" data-key="grower" data-unlocked="true">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">Grower</div>
-                  <div class="text-sm text-white/60">Grow your flame once (Spark → Growing).</div>
-                  <div class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/5/2026, 08:21</div>
+                  <div data-i18n="ach.grower.title" class="font-semibold">Grower</div>
+                  <div data-i18n="ach.grower.desc" class="text-sm text-white/60">Grow your flame once (Spark → Growing).</div>
+                  <div data-i18n="demo.unlocked1" class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/5/2026, 08:21</div>
                 </div>
                 <div class="achIcon text-xs">✅</div>
               </div>
@@ -300,9 +322,9 @@
             <div class="achievement rounded-2xl border border-orange-400/30 bg-orange-500/10 p-4" data-key="part_of_process" data-unlocked="true">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">It’s a part of the process</div>
-                  <div class="text-sm text-white/60">Fail your streak.</div>
-                  <div class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/7/2026, 19:02</div>
+                  <div data-i18n="ach.part_of_process.title" class="font-semibold">It’s a part of the process</div>
+                  <div data-i18n="ach.part_of_process.desc" class="text-sm text-white/60">Fail your streak once.</div>
+                  <div data-i18n="demo.unlocked2" class="achMeta mt-2 text-xs text-white/50">Unlocked: 1/7/2026, 19:02</div>
                 </div>
                 <div class="achIcon text-xs">✅</div>
               </div>
@@ -312,8 +334,8 @@
             <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="self_control" data-unlocked="false">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">You can stop this</div>
-                  <div class="text-sm text-white/60">Press PANIC and fight the urge</div>
+                  <div data-i18n="ach.self_control.title" class="font-semibold">You can stop this</div>
+                  <div data-i18n="ach.self_control.desc" class="text-sm text-white/60">You pressed PANIC and interrupted the urge.</div>
                 </div>
                 <div class="achIcon text-xs">🔒</div>
               </div>
@@ -322,8 +344,8 @@
             <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="never_back_down" data-unlocked="false">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">Never back down never what?</div>
-                  <div class="text-sm text-white/60">Fail 5 times.</div>
+                  <div data-i18n="ach.never_back_down.title" class="font-semibold">Never back down never what?</div>
+                  <div data-i18n="ach.never_back_down.desc" class="text-sm text-white/60">Fail 5 times.</div>
                 </div>
                 <div class="achIcon text-xs">🔒</div>
               </div>
@@ -332,8 +354,8 @@
             <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="month_clean" data-unlocked="false">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">A month clean</div>
-                  <div class="text-sm text-white/60">Reach the Emerald Flame (30 days).</div>
+                  <div data-i18n="ach.month_clean.title" class="font-semibold">A month clean</div>
+                  <div data-i18n="ach.month_clean.desc" class="text-sm text-white/60">Reach the Emerald Flame (30 days).</div>
                 </div>
                 <div class="achIcon text-xs">🔒</div>
               </div>
@@ -342,8 +364,8 @@
             <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4 opacity-70" data-key="stronger_than_ever" data-unlocked="false">
               <div class="flex items-start justify-between gap-3">
                 <div>
-                  <div class="font-semibold">Stronger than ever</div>
-                  <div class="text-sm text-white/60">Reach the Ruby Flame (60 days).</div>
+                  <div data-i18n="ach.stronger_than_ever.title" class="font-semibold">Stronger than ever</div>
+                  <div data-i18n="ach.stronger_than_ever.desc" class="text-sm text-white/60">Reach the Platinum Flame (60 days).</div>
                 </div>
                 <div class="achIcon text-xs">🔒</div>
               </div>
@@ -351,13 +373,13 @@
           </div>
 
           <!-- Demo note -->
-          <div class="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+          <div data-i18n="demo.achNote" class="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
             This is a demo preview. Achievements are shown only — they can’t be changed here.
           </div>
         </div>
       </div>
 
-      <footer class="mt-10 text-center text-xs text-white/40">
+      <footer data-i18n="demo.footer" class="mt-10 text-center text-xs text-white/40">
         Built by Tomm for a healthier world. Any bugs can be DM-ed to me on tiktok @tommfr38
       </footer>
     </main>
@@ -369,12 +391,13 @@
   <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
     <div class="flex items-start justify-between gap-4">
       <div>
-        <h3 class="text-lg font-extrabold">Flame stages</h3>
-        <p class="mt-1 text-sm text-white/60">How your flame evolves over time.</p>
+        <h3 data-i18n="flameInfo.title" class="text-lg font-extrabold">Flame stages</h3>
+        <p data-i18n="demo.flameSub" class="mt-1 text-sm text-white/60">How your flame evolves over time.</p>
       </div>
 
       <button
         id="btnCloseFlameInfo"
+        data-i18n="flameInfo.close"
         class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]"
       >
         Close
@@ -383,27 +406,27 @@
 
     <div class="mt-5 space-y-2 text-sm">
       <div class="rounded-2xl border border-white/10 bg-white/10 p-3">
-        <div class="font-bold">Calm Control <span class="text-xs text-orange-300">(current)</span></div>
-        <div class="text-white/60 text-xs">14–21 days</div>
+        <div class="font-bold"><span data-i18n="demo.stageCalm">Calm Control</span> <span data-i18n="flameInfo.current" class="text-xs text-orange-300">(current)</span></div>
+        <div data-i18n="demo.rangeCalm" class="text-white/60 text-xs">14–21 days</div>
       </div>
 
       <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
-        <div class="font-semibold">Diamond Flame</div>
-        <div class="text-white/60 text-xs">21–30 days</div>
+        <div data-i18n="stage.diamond" class="font-semibold">Diamond Flame</div>
+        <div data-i18n="range.diamond" class="text-white/60 text-xs">21–30 days</div>
       </div>
 
       <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
-        <div class="font-semibold">Emerald Flame</div>
-        <div class="text-white/60 text-xs">30–60 days</div>
+        <div data-i18n="stage.emerald" class="font-semibold">Emerald Flame</div>
+        <div data-i18n="range.emerald" class="text-white/60 text-xs">30–60 days</div>
       </div>
 
       <div class="rounded-2xl border border-white/10 bg-white/5 p-3">
-        <div class="font-semibold">Platinum Flame</div>
-        <div class="text-white/60 text-xs">60+ days</div>
+        <div data-i18n="stage.platinum" class="font-semibold">Platinum Flame</div>
+        <div data-i18n="range.platinum" class="text-white/60 text-xs">60+ days</div>
       </div>
     </div>
 
-    <p class="mt-5 text-xs text-white/50">
+    <p data-i18n="demo.flameNote" class="mt-5 text-xs text-white/50">
       Demo preview — real stages update live in your account.
     </p>
   </div>

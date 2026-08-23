@@ -34,6 +34,9 @@
          a fresh index.html with a stale script. -->
     <script src="./config.js?v=2"></script>
 
+    <!-- i18n: EN / DE / ES / FR / HU. Must load before app.js. -->
+    <script src="./i18n.js?v=1"></script>
+
     <!-- maintenance mode redirect -->
     <script src="./maintenance-check.js?v=2"></script>
 
@@ -114,14 +117,14 @@
 
     <div>
       <h1 class="text-3xl font-bold tracking-tight text-white">NeverFap</h1>
-      <p class="mt-1 text-xs tracking-[0.3em] uppercase text-white/40">Initializing system</p>
+      <p data-i18n="load.init" class="mt-1 text-xs tracking-[0.3em] uppercase text-white/40">Initializing system</p>
     </div>
 
     <div class="w-56 h-px bg-white/10 overflow-hidden rounded-full">
       <div id="loadingBar" class="h-full bg-orange-400/80 rounded-full" style="width:0%;transition:none"></div>
     </div>
 
-    <div class="mt-2 h-16 w-full max-w-xs">
+    <div class="mt-2 min-h-[4rem] w-full max-w-xs">
       <div id="loadingTip" class="transition-opacity duration-500" style="opacity:0">
         <p class="text-[10px] font-semibold uppercase tracking-[0.25em] text-orange-300/70">
           <span id="loadingTipLabel"></span>
@@ -131,6 +134,7 @@
     </div>
 
     <button id="btnSkipLoad" type="button"
+      data-i18n="load.skip"
       class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white/50 transition hover:bg-white/10 hover:text-white/80 active:scale-[0.97]">
       Skip
     </button>
@@ -147,10 +151,11 @@
   <div class="relative z-10 flex flex-col items-center gap-5">
     <div class="text-5xl">💀</div>
     <div>
-      <h2 class="text-2xl font-bold tracking-tight text-white">NeverFap has crashed.</h2>
-      <p class="mt-2 text-sm text-white/50">Please reload.</p>
+      <h2 data-i18n="crash.title" class="text-2xl font-bold tracking-tight text-white">NeverFap has crashed.</h2>
+      <p data-i18n="crash.sub" class="mt-2 text-sm text-white/50">Please reload.</p>
     </div>
     <button id="btnCrashReload" type="button"
+      data-i18n="crash.reload"
       class="rounded-2xl bg-orange-500/80 px-6 py-3 text-sm font-extrabold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
       Reload
     </button>
@@ -201,7 +206,7 @@
 
     <main class="mx-auto max-w-4xl px-4 py-10">
       <!-- Header -->
-      <header class="flex items-center justify-between gap-4">
+      <header class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold tracking-tight">NeverFap</h1>
@@ -210,6 +215,7 @@
             <div id="clawdTrack" class="relative hidden h-8 w-28 select-none" aria-hidden="false">
               <div id="clawdWalker" class="absolute bottom-0 left-0 will-change-transform">
                 <button id="clawd" type="button" title="Who's this little guy?"
+                  data-i18n-attr="title:header.clawdTitle"
                   class="block cursor-pointer bg-transparent p-0 outline-none"
                   aria-label="Clawd">
                   <svg width="32" height="27" viewBox="0 0 56 48" fill="none" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
@@ -226,19 +232,22 @@
               </div>
             </div>
           </div>
-          <p class="text-sm text-white/60">Be healthier, never fap.</p>
+          <p data-i18n="header.tagline" class="text-sm text-white/60">Be healthier, never fap.</p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <!-- Language picker (i18n.js mounts the select in here) -->
+          <div data-nf-lang class="flex items-center"></div>
+
           <!-- Achievements (only show when authed; app.js will toggle it) -->
-          <button id="btnAchievements"
+          <button id="btnAchievements" data-i18n="header.achievements"
             class="hidden rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
             Achievements
           </button>
 
           <span id="userEmail" class="hidden text-sm text-white/70 md:inline"></span>
 
-          <button id="btnSignOut"
+          <button id="btnSignOut" data-i18n="header.signout"
             class="hidden rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
             Sign out
           </button>
@@ -254,22 +263,22 @@
       <section id="viewAuth" class="mt-10">
         <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow backdrop-blur">
           <div class="flex flex-col gap-2">
-            <h2 class="text-xl font-semibold">Log in</h2>
-            <p class="text-sm text-white/60">
+            <h2 data-i18n="auth.title" class="text-xl font-semibold">Log in</h2>
+            <p data-i18n="auth.sub" class="text-sm text-white/60">
               Your data is secured.
             </p>
           </div>
 
           <div class="mt-6 grid gap-4 md:grid-cols-2">
             <label class="block">
-              <span class="text-sm text-white/70">Email</span>
+              <span data-i18n="auth.email" class="text-sm text-white/70">Email</span>
               <input id="email" type="email" autocomplete="email"
                 class="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-white outline-none ring-0 transition focus:border-indigo-400/40 focus:shadow-glow"
                 placeholder="you@example.com" />
             </label>
 
             <label class="block">
-              <span class="text-sm text-white/70">Password</span>
+              <span data-i18n="auth.password" class="text-sm text-white/70">Password</span>
               <input id="password" type="password" autocomplete="current-password"
                 class="mt-1 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-white outline-none transition focus:border-indigo-400/40 focus:shadow-glow"
                 placeholder="••••••••" />
@@ -277,34 +286,34 @@
           </div>
 
           <div class="mt-6 flex flex-wrap gap-3">
-            <button id="btnLogin"
+            <button id="btnLogin" data-i18n="auth.login"
               class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
               Log in
             </button>
 
-            <button id="btnSignup"
+            <button id="btnSignup" data-i18n="auth.signup"
               class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
               Sign up
             </button>
 
-            <a href="./delete.html"
+            <a href="./delete.html" data-i18n="auth.delete"
               class="inline-flex items-center justify-center rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-3 text-sm font-bold text-red-100 shadow-[0_0_30px_rgba(239,68,68,0.28)] transition hover:bg-red-500/20 active:scale-[0.98]">
               Delete my account
             </a>
 
-            <button id="btnForgotPassword"
+            <button id="btnForgotPassword" data-i18n="auth.forgot"
               class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
               Forgot password?
             </button>
 
-            <button id="btnDemoFill"
+            <button id="btnDemoFill" data-i18n="auth.demo"
               class="ml-auto rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
               Fill demo
             </button>
           </div>
 
 
-          <p class="mt-4 text-xs text-white/50">
+          <p data-i18n="auth.note" class="mt-4 text-xs text-white/50">
             All information kept is fully secure, nobody can view it. Not even administrators.
           </p>
         </div>
@@ -318,15 +327,16 @@
             <div class="flex items-start justify-between gap-4">
               <div>
                 <div class="flex items-center gap-2">
-                  <h2 class="text-xl font-semibold">Your Flame</h2>
+                  <h2 data-i18n="flame.title" class="text-xl font-semibold">Your Flame</h2>
                   <button id="btnFlameInfo"
                     class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-extrabold text-white/70 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
+                    data-i18n-attr="aria-label:flame.infoAria;title:flame.infoTitle"
                     aria-label="Flame stages info"
                     title="Flame stages">
                     ⓘ
                   </button>
                 </div>
-                <p class="text-sm text-white/60">Your little buddy who grows with time!</p>
+                <p data-i18n="flame.sub" class="text-sm text-white/60">Your little buddy who grows with time!</p>
               </div>
               <div class="rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2 text-xs text-white/70">
                 <span id="flameStage">—</span>
@@ -354,26 +364,26 @@
               </div>
 
               <div class="flex-1">
-                <div class="text-sm text-white/60">Time since start</div>
+                <div data-i18n="flame.elapsedLabel" class="text-sm text-white/60">Time since start</div>
                 <div id="elapsed" class="mt-1 text-2xl font-bold tracking-tight">—</div>
                 <div id="startedAt" class="mt-1 text-xs text-white/50">—</div>
               </div>
             </div>
 
             <div class="mt-6 grid grid-cols-2 gap-3">
-              <button id="btnStart"
+              <button id="btnStart" data-i18n="flame.start"
                 class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
                 Start
               </button>
 
-              <button id="btnFailed"
+              <button id="btnFailed" data-i18n="flame.failed"
                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.98]">
                 I failed
               </button>
 
-              <button id="btnPanic"
+              <button id="btnPanic" data-i18n="flame.panic"
                 class="col-span-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-extrabold text-red-100 shadow-glow transition hover:bg-red-500/15 active:scale-[0.98]">
-                PANIC - UPDATED
+                PANIC
               </button>
             </div>
           </div>
@@ -382,10 +392,10 @@
           <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow backdrop-blur">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <h2 class="text-xl font-semibold">Diary</h2>
-                <p class="text-sm text-white/60">Private notes. Short is fine.</p>
+                <h2 data-i18n="diary.title" class="text-xl font-semibold">Diary</h2>
+                <p data-i18n="diary.sub" class="text-sm text-white/60">Private notes. Short is fine.</p>
               </div>
-              <button id="btnRefreshDiary"
+              <button id="btnRefreshDiary" data-i18n="diary.refresh"
                 class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.98]">
                 Refresh
               </button>
@@ -393,28 +403,29 @@
 
             <textarea id="diaryText" rows="4"
               class="mt-4 w-full rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-white outline-none transition focus:border-indigo-400/40 focus:shadow-glow"
+              data-i18n-attr="placeholder:diary.placeholder"
               placeholder="What’s going on right now?"></textarea>
 
             <div class="mt-3 flex gap-3">
-              <button id="btnAddEntry"
+              <button id="btnAddEntry" data-i18n="diary.add"
                 class="rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-bold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
                 Add entry
               </button>
-              <button id="btnClearText"
+              <button id="btnClearText" data-i18n="diary.clear"
                 class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.98]">
                 Clear
               </button>
             </div>
 
             <div class="mt-6">
-              <div class="mb-2 text-sm font-semibold text-white/70">Recent</div>
+              <div data-i18n="diary.recent" class="mb-2 text-sm font-semibold text-white/70">Recent</div>
               <div id="diaryList" class="max-h-64 space-y-3 overflow-auto pr-1"></div>
             </div>
           </div>
         </div>
 
         <!-- iOS button -->
-      <a href="./nfios.html"
+      <a href="./nfios.html" data-i18n="ios.cta"
         class="mt-6 block w-full rounded-3xl border border-white/10 bg-white/5 px-6 py-4 text-center text-sm font-extrabold text-white/90 shadow-glow transition hover:bg-white/10 active:scale-[0.99]">
           Get NeverFap on iOS
           </a>
@@ -426,11 +437,11 @@
         <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h3 class="text-lg font-extrabold">Flame stages</h3>
-              <p class="mt-1 text-sm text-white/60">Here’s how your flame evolves over time.</p>
+              <h3 data-i18n="flameInfo.title" class="text-lg font-extrabold">Flame stages</h3>
+              <p data-i18n="flameInfo.sub" class="mt-1 text-sm text-white/60">Here’s how your flame evolves over time.</p>
             </div>
 
-            <button id="btnCloseFlameInfo"
+            <button id="btnCloseFlameInfo" data-i18n="flameInfo.close"
               class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
               Close
             </button>
@@ -438,7 +449,7 @@
 
           <div id="flameInfoList" class="mt-5 space-y-2"></div>
 
-          <p class="mt-5 text-xs text-white/50">
+          <p data-i18n="flameInfo.footer" class="mt-5 text-xs text-white/50">
             Your current stage is based on the time since you pressed Start.
           </p>
         </div>
@@ -451,13 +462,13 @@
           <div class="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <h3 class="text-lg font-extrabold">Achievements</h3>
-                <p class="mt-1 text-sm text-white/60">
+                <h3 data-i18n="ach.title" class="text-lg font-extrabold">Achievements</h3>
+                <p data-i18n="ach.sub" class="mt-1 text-sm text-white/60">
                   Earn achievements by using the app.
                 </p>
               </div>
 
-              <button id="btnCloseAchievements"
+              <button id="btnCloseAchievements" data-i18n="ach.close"
                 class="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
                 Close
               </button>
@@ -467,10 +478,10 @@
               <!-- Each achievement item: app.js will later toggle data-unlocked="true" -->
               <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4" data-key="grower" data-unlocked="false">
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">Grower</div>
+                  <div data-i18n="ach.grower.title" class="font-bold">Grower</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
-                <div class="mt-1 text-sm text-white/65">Grow your flame once (Spark → Growing).</div>
+                <div data-i18n="ach.grower.desc" class="mt-1 text-sm text-white/65">Grow your flame once (Spark → Growing).</div>
                 <div class="achMeta mt-2 text-xs text-white/40"></div>
               </div>
               
@@ -480,11 +491,11 @@
                 data-unlocked="false"
               >
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">You can stop this</div>
+                  <div data-i18n="ach.self_control.title" class="font-bold">You can stop this</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
 
-                <div class="mt-1 text-sm text-white/65">
+                <div data-i18n="ach.self_control.desc" class="mt-1 text-sm text-white/65">
                   You pressed PANIC and interrupted the urge.
                 </div>
 
@@ -493,52 +504,52 @@
 
               <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4" data-key="part_of_process" data-unlocked="false">
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">It’s a part of the process</div>
+                  <div data-i18n="ach.part_of_process.title" class="font-bold">It’s a part of the process</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
-                <div class="mt-1 text-sm text-white/65">Fail your streak once.</div>
+                <div data-i18n="ach.part_of_process.desc" class="mt-1 text-sm text-white/65">Fail your streak once.</div>
                 <div class="achMeta mt-2 text-xs text-white/40"></div>
               </div>
 
               <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4" data-key="never_back_down" data-unlocked="false">
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">Never back down never what?</div>
+                  <div data-i18n="ach.never_back_down.title" class="font-bold">Never back down never what?</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
-                <div class="mt-1 text-sm text-white/65">Fail 5 times.</div>
+                <div data-i18n="ach.never_back_down.desc" class="mt-1 text-sm text-white/65">Fail 5 times.</div>
                 <div class="achMeta mt-2 text-xs text-white/40"></div>
               </div>
 
               <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4" data-key="month_clean" data-unlocked="false">
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">A month clean</div>
+                  <div data-i18n="ach.month_clean.title" class="font-bold">A month clean</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
-                <div class="mt-1 text-sm text-white/65">Reach the Emerald Flame (30 days).</div>
+                <div data-i18n="ach.month_clean.desc" class="mt-1 text-sm text-white/65">Reach the Emerald Flame (30 days).</div>
                 <div class="achMeta mt-2 text-xs text-white/40"></div>
               </div>
 
               <div class="achievement rounded-2xl border border-white/10 bg-white/5 p-4" data-key="stronger_than_ever" data-unlocked="false">
                 <div class="flex items-center justify-between">
-                  <div class="font-bold">Stronger than ever</div>
+                  <div data-i18n="ach.stronger_than_ever.title" class="font-bold">Stronger than ever</div>
                   <div class="achIcon text-xs text-white/50">🔒</div>
                 </div>
-                <div class="mt-1 text-sm text-white/65">Reach the Platinum Flame (60 days).</div>
+                <div data-i18n="ach.stronger_than_ever.desc" class="mt-1 text-sm text-white/65">Reach the Platinum Flame (60 days).</div>
                 <div class="achMeta mt-2 text-xs text-white/40"></div>
               </div>
             </div>
 
             <div class="mt-6 flex flex-col gap-2">
-              <button id="btnSaveAchievements"
+              <button id="btnSaveAchievements" data-i18n="ach.save"
                 class="w-full rounded-2xl bg-orange-500/80 px-4 py-3 text-sm font-extrabold shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
                 Save achievements
               </button>
-              <p id="achSaveHint" class="text-center text-xs text-white/50">
+              <p id="achSaveHint" data-i18n="ach.hint" class="text-center text-xs text-white/50">
                 Manual save to prevent bugs.
               </p>
             </div>
 
-            <p class="mt-5 text-xs text-white/50">
+            <p data-i18n="ach.tip" class="mt-5 text-xs text-white/50">
               Tip: Achievements do not save automatically, press save to ensure your progress being saved!
             </p>
           </div>
@@ -551,25 +562,25 @@
 
             <div class="flex items-center justify-between px-6 pt-5">
               <div>
-                <h3 class="text-lg font-bold text-red-100">Panic Mode</h3>
-                <p class="text-xs text-white/50">Stay with it. The urge passes.</p>
+                <h3 data-i18n="panic.title" class="text-lg font-bold text-red-100">Panic Mode</h3>
+                <p data-i18n="panic.sub" class="text-xs text-white/50">Stay with it. The urge passes.</p>
               </div>
-              <button id="btnClosePanic"
+              <button id="btnClosePanic" data-i18n="panic.close"
                 class="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.96]">
                 Close
               </button>
             </div>
 
             <div class="mt-4 flex gap-1 border-b border-white/10 px-6">
-              <button data-panic-tab="breathe"
+              <button data-panic-tab="breathe" data-i18n="panic.tab.breathe"
                 class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
                 BREATHE
               </button>
-              <button data-panic-tab="challenge"
+              <button data-panic-tab="challenge" data-i18n="panic.tab.challenge"
                 class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
                 CHALLENGE
               </button>
-              <button data-panic-tab="hits"
+              <button data-panic-tab="hits" data-i18n="panic.tab.hits"
                 class="panic-tab flex-1 whitespace-nowrap rounded-t-xl px-2 py-2.5 text-[11px] font-bold tracking-wide transition sm:text-xs">
                 QUICK FIXES
               </button>
@@ -588,17 +599,17 @@
                     <div id="breathCircle"
                       class="absolute h-40 w-40 rounded-full bg-gradient-to-br from-red-500/40 to-rose-700/30 transition-transform ease-in-out"></div>
                     <div class="relative z-10 text-center">
-                      <div id="breathPhase" class="text-lg font-extrabold tracking-wide text-white">Ready</div>
+                      <div id="breathPhase" data-i18n="breath.ready" class="text-lg font-extrabold tracking-wide text-white">Ready</div>
                       <div id="breathCount" class="mt-1 text-4xl font-black tabular-nums text-red-200">4</div>
                     </div>
                   </div>
 
-                  <p class="mt-2 text-center text-xs text-white/50">
+                  <p data-i18n="breath.help" class="mt-2 text-center text-xs text-white/50">
                     Box breathing. Follow the circle: in 4, hold 4, out 4, hold 4.
                   </p>
                   <p id="breathCycles" class="mt-3 text-sm font-semibold text-white/70">Cycles completed: 0</p>
 
-                  <button id="btnBreathToggle"
+                  <button id="btnBreathToggle" data-i18n="breath.start"
                     class="mt-4 w-full rounded-2xl bg-red-500/80 px-4 py-3 text-sm font-extrabold shadow-glowRed transition hover:bg-red-500 active:scale-[0.98]">
                     Start breathing
                   </button>
@@ -608,7 +619,7 @@
               <!-- Tab 2: Challenge -->
               <div data-panic-panel="challenge" class="hidden">
                 <div id="challengePicker">
-                  <p class="text-sm text-white/70">Pick one. Do it now, not later.</p>
+                  <p data-i18n="chal.pick" class="text-sm text-white/70">Pick one. Do it now, not later.</p>
                   <div id="challengeList" class="mt-4 grid gap-2"></div>
                 </div>
 
@@ -622,10 +633,10 @@
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                       <div id="challengeTime" class="text-4xl font-black tabular-nums text-white">0:00</div>
-                      <div class="text-[10px] uppercase tracking-[0.2em] text-white/40">remaining</div>
+                      <div data-i18n="chal.remaining" class="text-[10px] uppercase tracking-[0.2em] text-white/40">remaining</div>
                     </div>
                   </div>
-                  <button id="btnChallengeCancel"
+                  <button id="btnChallengeCancel" data-i18n="chal.giveup"
                     class="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10 active:scale-[0.98]">
                     Give up
                   </button>
@@ -633,9 +644,9 @@
 
                 <div id="challengeDone" class="relative hidden overflow-hidden text-center">
                   <div class="text-6xl">🔥</div>
-                  <div class="mt-3 text-xl font-black text-red-200">You beat it.</div>
-                  <p class="mt-1 text-sm text-white/60">The urge lost. Your flame is still burning.</p>
-                  <button id="btnChallengeAgain"
+                  <div data-i18n="chal.beat" class="mt-3 text-xl font-black text-red-200">You beat it.</div>
+                  <p data-i18n="chal.beatSub" class="mt-1 text-sm text-white/60">The urge lost. Your flame is still burning.</p>
+                  <button id="btnChallengeAgain" data-i18n="chal.again"
                     class="mt-5 w-full rounded-2xl bg-red-500/80 px-4 py-3 text-sm font-extrabold shadow-glowRed transition hover:bg-red-500 active:scale-[0.98]">
                     Another one
                   </button>
@@ -644,15 +655,15 @@
 
               <!-- Tab 3: Quick Hits -->
               <div data-panic-panel="hits" class="hidden">
-                <p class="text-sm text-white/70">Cheap dopamine that costs you nothing. Tap to mark done, tap again to undo.</p>
+                <p data-i18n="hits.help" class="text-sm text-white/70">Cheap dopamine that costs you nothing. Tap to mark done, tap again to undo.</p>
                 <div id="hitsList" class="mt-4 grid gap-2"></div>
                 <div class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-                  <div class="font-semibold text-white/80">If nothing works:</div>
+                  <div data-i18n="hits.nothingTitle" class="font-semibold text-white/80">If nothing works:</div>
                   <ul class="mt-2 list-disc space-y-1 pl-5">
-                    <li>Leave the room. Go outside, even for 60 seconds.</li>
-                    <li>Put your phone in another room, screen down.</li>
-                    <li>Open the diary and write the urge out in full.</li>
-                    <li>Message someone. Anyone. Break the isolation.</li>
+                    <li data-i18n="hits.n1">Leave the room. Go outside, even for 60 seconds.</li>
+                    <li data-i18n="hits.n2">Put your phone in another room, screen down.</li>
+                    <li data-i18n="hits.n3">Open the diary and write the urge out in full.</li>
+                    <li data-i18n="hits.n4">Message someone. Anyone. Break the isolation.</li>
                   </ul>
                 </div>
               </div>
@@ -664,14 +675,14 @@
         <div id="confirmFailedModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
           <div id="confirmFailedBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur"></div>
           <div class="relative w-full max-w-sm rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow">
-            <h3 class="text-lg font-bold">Reset your streak?</h3>
-            <p class="mt-2 text-sm text-white/70">This will clear your current flame and add a fail to your count. This can't be undone.</p>
+            <h3 data-i18n="fail.title" class="text-lg font-bold">Reset your streak?</h3>
+            <p data-i18n="fail.body" class="mt-2 text-sm text-white/70">This will clear your current flame and add a fail to your count. This can't be undone.</p>
             <div class="mt-6 flex gap-3">
-              <button id="btnConfirmFailed"
+              <button id="btnConfirmFailed" data-i18n="fail.yes"
                 class="flex-1 rounded-2xl bg-red-500/70 px-4 py-3 text-sm font-extrabold text-red-100 transition hover:bg-red-500 active:scale-[0.98]">
                 Yes, I failed
               </button>
-              <button id="btnCancelFailed"
+              <button id="btnCancelFailed" data-i18n="fail.cancel"
                 class="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]">
                 Cancel
               </button>
@@ -684,16 +695,17 @@
           <div id="globalPopupBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
 
           <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 shadow-glow backdrop-blur">
-            <h3 id="globalPopupTitle" class="text-2xl font-extrabold text-white">
+            <h3 id="globalPopupTitle" data-i18n="popup.defaultTitle" class="text-2xl font-extrabold text-white">
               Maintenance
             </h3>
 
-            <p id="globalPopupMessage" class="mt-3 whitespace-pre-wrap text-sm text-white/70">
+            <p id="globalPopupMessage" data-i18n="popup.defaultMsg" class="mt-3 whitespace-pre-wrap text-sm text-white/70">
               Maintenance break soon!
             </p>
 
             <button
               id="btnCloseGlobalPopup"
+              data-i18n="popup.close"
               class="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:bg-white/10 active:scale-[0.98]"
               type="button"
             >
@@ -710,12 +722,12 @@
   <div class="relative w-full max-w-xl rounded-3xl border border-white/10 bg-slate-950/70 p-6 shadow-glow backdrop-blur">
     <div class="flex items-start justify-between gap-4">
       <div class="min-w-0"> 
-        <div class="text-3xl font-extrabold tracking-tight text-white">Please send an email to</div>
+        <div data-i18n="forgot.line1" class="text-3xl font-extrabold tracking-tight text-white">Please send an email to</div>
         <div class="mt-3 break-words text-4xl font-extrabold tracking-tight text-orange-400">neverfap@tommfr38.com</div>
-        <div class="mt-4 text-sm text-white/60">With the email you signed up with. Responses range up to 72 hours.</div>
+        <div data-i18n="forgot.line2" class="mt-4 text-sm text-white/60">With the email you signed up with. Responses range up to 72 hours.</div>
       </div>
 
-      <button id="btnCloseForgot"
+      <button id="btnCloseForgot" data-i18n="forgot.close"
         class="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
         type="button">
         Close
@@ -729,16 +741,16 @@
   <div id="bugReportBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur"></div>
 
   <div class="relative w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950/80 p-6 text-center shadow-glow backdrop-blur">
-    <h3 class="text-2xl font-extrabold text-white">Did someone say... bugs?</h3>
-    <p class="mt-3 text-sm text-white/70">To report bugs, press the button below</p>
+    <h3 data-i18n="bug.title" class="text-2xl font-extrabold text-white">Did someone say... bugs?</h3>
+    <p data-i18n="bug.sub" class="mt-3 text-sm text-white/70">To report bugs, press the button below</p>
 
     <div class="mt-6 flex flex-wrap justify-center gap-3">
-      <a href="mailto:neverfap@tommfr38.com"
+      <a href="mailto:neverfap@tommfr38.com" data-i18n="bug.cta"
         class="inline-flex items-center justify-center rounded-2xl bg-orange-500/80 px-5 py-3 text-sm font-extrabold text-white shadow-glowWarm transition hover:bg-orange-500 active:scale-[0.98]">
         Report bugs
       </a>
 
-      <button id="btnCloseBugReport"
+      <button id="btnCloseBugReport" data-i18n="bug.close"
         class="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 shadow-glow transition hover:bg-white/10 active:scale-[0.98]"
         type="button">
         Close
@@ -747,12 +759,12 @@
   </div>
 </div>
 
-      <div id="lastSavedText" class="fixed bottom-4 right-4 text-xs italic text-white/35 pointer-events-none">
+      <div id="lastSavedText" data-i18n="footer.lastSavedEmpty" class="fixed bottom-4 right-4 text-xs italic text-white/35 pointer-events-none">
         Last saved --:--:--
       </div>
       <footer class="mt-10 text-center text-xs text-white/40">
-        Built by Tomm for a healthier world.
-        <button id="btnBugReport"
+        <span data-i18n="footer.built">Built by Tomm for a healthier world.</span>
+        <button id="btnBugReport" data-i18n="footer.bugLink"
           class="ml-1 underline underline-offset-2 transition hover:text-white/70"
           type="button">
           Report bugs by clicking me!
@@ -777,20 +789,12 @@
       // 1-in-20 gag, only ever reachable by pressing Skip (see finish()).
       var willCrash = Math.floor(Math.random() * 20) === 0;
 
-      // Tips — one of these three is picked per startup.
+      // Tips — one of these three is picked per startup. Text comes from i18n.js.
+      var t = (window.NF_I18N && window.NF_I18N.t) || function (k) { return k; };
       var tips = [
-        {
-          label: 'Panic Mode',
-          text: 'Hit PANIC when an urge lands. Guided breathing, timed challenges and quick fixes are all in there.'
-        },
-        {
-          label: 'The Diary',
-          text: 'Write the urge out. Naming what set it off is how you spot the pattern later.'
-        },
-        {
-          label: 'Restarting Is Fine',
-          text: 'A reset is not a failure. Everyone starts over. What counts is that you start again.'
-        }
+        { label: t('load.tip1.label'), text: t('load.tip1.text') },
+        { label: t('load.tip2.label'), text: t('load.tip2.text') },
+        { label: t('load.tip3.label'), text: t('load.tip3.text') }
       ];
 
       var tipBox   = document.getElementById('loadingTip');
@@ -813,7 +817,7 @@
 
         if (count !== last) {
           last = count;
-          if (procEl) procEl.textContent = 'Loading Alpha Processors ' + count + '/84';
+          if (procEl) procEl.textContent = t('load.processors', { n: count });
           if (barEl)  barEl.style.width  = (count / total * 100) + '%';
         }
 
@@ -837,7 +841,7 @@
         if (finished) return;
         finished = true;
 
-        if (procEl) procEl.textContent = 'Loading Alpha Processors 84/84';
+        if (procEl) procEl.textContent = t('load.processors', { n: total });
         if (barEl)  barEl.style.width  = '100%';
 
         setTimeout(function () {
@@ -906,17 +910,17 @@
           <rect x="14" y="12" width="7" height="8" fill="#141414"/>
           <rect x="35" y="12" width="7" height="8" fill="#141414"/>
         </svg>
-        <h2 class="mt-3 text-lg font-extrabold">Meet Clawd!</h2>
-        <p class="mt-2 text-sm text-white/70">
+        <h2 data-i18n="clawd.title" class="mt-3 text-lg font-extrabold">Meet Clawd!</h2>
+        <p data-i18n-html="clawd.p1" class="mt-2 text-sm text-white/70">
           Clawd is the tiny mascot of <span class="font-semibold text-white/90">Claude Code</span>,
           who helps build and maintain NeverFap behind the scenes.
         </p>
-        <p class="mt-3 text-sm text-white/70">
+        <p data-i18n-html="clawd.p2" class="mt-3 text-sm text-white/70">
           He's running around celebrating
           <span class="font-semibold text-orange-300">Fable 5</span>'s return after 19 days.
           Fable 5 is Claude's strongest AI model, so strong that the government banned him. He returned a few days ago. Yay!
         </p>
-        <button id="btnCloseClawd"
+        <button id="btnCloseClawd" data-i18n="clawd.close"
           class="mt-5 w-full rounded-2xl bg-orange-500/85 px-5 py-3 text-sm font-extrabold shadow-glow transition hover:bg-orange-500 active:scale-[0.98]">
           Neat 🧡
         </button>
@@ -983,6 +987,6 @@
         });
       })();
     </script>
-    <script src="./app.js?v=2"></script>
+    <script src="./app.js?v=3"></script>
   </body>
 </html>

@@ -16,6 +16,17 @@
   window.supa = supa;
   window.supaClient = supa;
 
+  // ----- i18n -----
+  // i18n.js is a plain global loaded before this file. The fallbacks keep the
+  // app running (in English) if it ever fails to load.
+  const I18N = window.NF_I18N;
+  const t = (key, params) => (I18N ? I18N.t(key, params) : key);
+  const fmtDateTime = (value) =>
+    I18N ? I18N.dateTime(value) : new Date(value).toLocaleString();
+  // "1.5" in English, "1,5" in German/French/Spanish/Hungarian.
+  const fmtNumber = (value) =>
+    I18N ? value.toLocaleString(I18N.locale()) : String(value);
+
   // ----- Elements -----
   const viewAuth = document.getElementById("viewAuth");
   const viewApp = document.getElementById("viewApp");
@@ -108,7 +119,11 @@
   let achievements = {};
   let achievementsDirty = false;
   let failCount = 0;
+  // Canonical English stage name — this is what lands in the database, so it
+  // must never be translated. Display names go through stageLabel().
   let bestStageName = "Unlit";
+  let lastSavedAt = null;
+  let diaryData = [];
 
   // ----- Helpers -----
   const on = (el, evt, fn) => {
@@ -132,16 +147,17 @@
   }
 
   function updateLastSavedText(date = null) {
+    lastSavedAt = date;
     if (!lastSavedText) return;
     if (!date) {
-      lastSavedText.textContent = "Last saved --:--:--";
+      lastSavedText.textContent = t("footer.lastSavedEmpty");
       return;
     }
 
     const hh = String(date.getHours()).padStart(2, "0");
     const mm = String(date.getMinutes()).padStart(2, "0");
     const ss = String(date.getSeconds()).padStart(2, "0");
-    lastSavedText.textContent = `Last saved ${hh}:${mm}:${ss}`;
+    lastSavedText.textContent = t("footer.lastSaved", { time: `${hh}:${mm}:${ss}` });
   }
 
   function stopAutosave() {
@@ -188,6 +204,8 @@
   }
 
   function fmtDuration(ms) {
+    if (I18N) return I18N.duration(ms);
+
     if (ms < 0) ms = 0;
     const s = Math.floor(ms / 1000);
     const days = Math.floor(s / 86400);
@@ -214,18 +232,27 @@
     return { name: "Platinum Flame", vibe: "platinum" };
   }
 
+// `name` stays English on purpose: it is the value persisted in profiles.best_stage
+// and compared against elsewhere. `nameKey`/`rangeKey` drive what the user sees.
+const STAGE_ROWS = [
+  { name: "Unlit",          nameKey: "stage.unlit",     rangeKey: "range.unlit",     order: 0 },
+  { name: "Spark",          nameKey: "stage.spark",     rangeKey: "range.spark",     order: 1 },
+  { name: "Growing",        nameKey: "stage.growing",   rangeKey: "range.growing",   order: 2 },
+  { name: "Ruby Flame",     nameKey: "stage.ruby",      rangeKey: "range.ruby",      order: 3 },
+  { name: "Amethyst Flame", nameKey: "stage.amethyst",  rangeKey: "range.amethyst",  order: 4 },
+  { name: "Diamond Flame",  nameKey: "stage.diamond",   rangeKey: "range.diamond",   order: 5 },
+  { name: "Emerald Flame",  nameKey: "stage.emerald",   rangeKey: "range.emerald",   order: 6 },
+  { name: "Platinum Flame", nameKey: "stage.platinum",  rangeKey: "range.platinum",  order: 7 },
+];
+
 function getStageInfoRows() {
-  return [
-    { name: "Unlit", range: "Before Start", order: 0 },
-    { name: "Spark", range: "0–12 hours", order: 1 },
-    { name: "Growing", range: "12–48 hours", order: 2 },
-    { name: "Ruby Flame", range: "2–7 days", order: 3 },
-    { name: "Amethyst Flame", range: "7–21 days", order: 4 },
-    { name: "Diamond Flame", range: "21–30 days", order: 5 },
-    { name: "Emerald Flame", range: "30–60 days", order: 6 },
-    { name: "Platinum Flame", range: "60+ days", order: 7 },
-  ];
+  return STAGE_ROWS;
 }
+
+  function stageLabel(name) {
+    const row = STAGE_ROWS.find((r) => r.name === name);
+    return row ? t(row.nameKey) : name;
+  }
   function renderFlameInfo() {
     if (!flameInfoList) return;
 
@@ -254,19 +281,19 @@ function getStageInfoRows() {
               <div class="font-bold ${
                 isCurrent ? "text-white" : "text-white/90"
               }">
-                ${r.name}
+                ${t(r.nameKey)}
                 ${
                   isCurrent
-                    ? ' <span class="text-xs text-orange-300/90">(current)</span>'
+                    ? ` <span class="text-xs text-orange-300/90">${t("flameInfo.current")}</span>`
                     : ""
                 }
                 ${
                   isBest
-                    ? ' <span class="text-xs text-sky-300/90">(best)</span>'
+                    ? ` <span class="text-xs text-sky-300/90">${t("flameInfo.best")}</span>`
                     : ""
                 }
               </div>
-              <div class="text-xs text-white/60">${r.range}</div>
+              <div class="text-xs text-white/60">${t(r.rangeKey)}</div>
             </div>
           </div>
         `;
@@ -325,7 +352,7 @@ function getStageInfoRows() {
 
   function openGlobalPopup(title, message) {
     if (!globalPopupModal) return;
-    if (globalPopupTitle) globalPopupTitle.textContent = title || "Notice";
+    if (globalPopupTitle) globalPopupTitle.textContent = title || t("popup.notice");
     if (globalPopupMessage) globalPopupMessage.textContent = message || "";
     globalPopupModal.classList.remove("hidden");
     globalPopupModal.classList.add("flex");
@@ -457,9 +484,9 @@ function getStageInfoRows() {
     }
 
     if (!startedAt) {
-      flameStageEl.textContent = "Unlit";
+      flameStageEl.textContent = stageLabel("Unlit");
       elapsedEl.textContent = "—";
-      startedAtEl.textContent = "Press Start to light it.";
+      startedAtEl.textContent = t("flame.pressStart");
       applyFlameVibe("unlit");
       return;
     }
@@ -478,9 +505,9 @@ function getStageInfoRows() {
       bestStageName = stage.name;
     }
 
-    flameStageEl.textContent = stage.name;
+    flameStageEl.textContent = stageLabel(stage.name);
     elapsedEl.textContent = fmtDuration(ms);
-    startedAtEl.textContent = `Started: ${startedAt.toLocaleString()}`;
+    startedAtEl.textContent = t("flame.startedAt", { date: fmtDateTime(startedAt) });
     applyFlameVibe(stage.vibe);
 
     if (flameInfoModal && !flameInfoModal.classList.contains("hidden")) {
@@ -510,6 +537,7 @@ function getStageInfoRows() {
       startedAt = null;
       renderFlame();
 
+      diaryData = [];
       if (diaryList) diaryList.innerHTML = "";
 
       const clawdTrack = document.getElementById("clawdTrack");
@@ -534,12 +562,12 @@ function getStageInfoRows() {
 
   // ----- Achievements helpers -----
   const ACH = {
-    grower: { title: "Grower" },
-    self_control: { title: "You can stop this" },
-    part_of_process: { title: "It’s a part of the process" },
-    never_back_down: { title: "Never back down never what?" },
-    month_clean: { title: "A month clean" },
-    stronger_than_ever: { title: "Stronger than ever" },
+    grower: { titleKey: "ach.grower.title" },
+    self_control: { titleKey: "ach.self_control.title" },
+    part_of_process: { titleKey: "ach.part_of_process.title" },
+    never_back_down: { titleKey: "ach.never_back_down.title" },
+    month_clean: { titleKey: "ach.month_clean.title" },
+    stronger_than_ever: { titleKey: "ach.stronger_than_ever.title" },
   };
 
   function isUnlocked(key) {
@@ -559,7 +587,7 @@ function getStageInfoRows() {
 
     achievementsDirty = true;
     renderAchievementsUI();
-    showToast(`Achievement unlocked: ${ACH[key].title} (remember to save)`);
+    showToast(t("toast.achUnlocked", { title: t(ACH[key].titleKey) }));
   }
 
   function renderAchievementsUI() {
@@ -585,18 +613,18 @@ function getStageInfoRows() {
       if (icon) icon.textContent = unlocked ? "✅" : "🔒";
 
       const meta = el.querySelector(".achMeta") || el.querySelector("[data-ach-meta]");
-      if (meta) meta.textContent = unlockedAt ? `Unlocked: ${new Date(unlockedAt).toLocaleString()}` : "";
+      if (meta) meta.textContent = unlockedAt ? t("ach.unlockedAt", { date: fmtDateTime(unlockedAt) }) : "";
     });
 
     if (btnSaveAchievements) {
       btnSaveAchievements.disabled = !achievementsDirty;
       btnSaveAchievements.classList.toggle("opacity-60", !achievementsDirty);
       btnSaveAchievements.classList.toggle("cursor-not-allowed", !achievementsDirty);
-      btnSaveAchievements.textContent = achievementsDirty ? "Save achievements" : "Saved ✓";
+      btnSaveAchievements.textContent = achievementsDirty ? t("ach.save") : t("ach.saved");
     }
 
     if (achSaveHint) {
-      achSaveHint.textContent = achievementsDirty ? "Manual save to prevent bugs." : "All set.";
+      achSaveHint.textContent = achievementsDirty ? t("ach.hint") : t("ach.hintDone");
     }
   }
 
@@ -616,7 +644,7 @@ function getStageInfoRows() {
   async function saveAchievementsNow() {
     if (!sessionUser) return;
     await saveAllNow(true);
-    showToast("Saved ✅");
+    showToast(t("toast.saved"));
   }
 
   // ----- Supabase calls -----
@@ -715,26 +743,33 @@ function getStageInfoRows() {
 
     if (error) throw error;
 
+    diaryData = data || [];
+    renderDiary();
+  }
+
+  function renderDiary() {
+    if (!diaryList) return;
+
     diaryList.innerHTML = "";
-    if (!data || data.length === 0) {
+    if (!diaryData.length) {
       diaryList.innerHTML =
-        `<div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/60">No entries yet.</div>`;
+        `<div class="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/60">${t("diary.empty")}</div>`;
       return;
     }
 
-    for (const entry of data) {
+    for (const entry of diaryData) {
       const wrap = document.createElement("div");
       wrap.className =
         "rounded-2xl border border-white/10 bg-white/5 p-3 shadow-[0_0_0_1px_rgba(255,255,255,0.06)]";
 
-      const when = new Date(entry.created_at).toLocaleString();
+      const when = fmtDateTime(entry.created_at);
 
       wrap.innerHTML = `
         <div class="flex items-start justify-between gap-3">
           <div class="text-xs text-white/50">${when}</div>
           <button data-id="${entry.id}"
             class="btnDel rounded-xl border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/60 transition hover:bg-white/10 active:scale-[0.98]">
-            Delete
+            ${t("diary.delete")}
           </button>
         </div>
         <div class="mt-2 whitespace-pre-wrap text-sm text-white/85">${escapeHtml(entry.text)}</div>
@@ -750,10 +785,10 @@ function getStageInfoRows() {
           const id = btn.getAttribute("data-id");
           const { error } = await supa.from("diary_entries").delete().eq("id", id);
           if (error) throw error;
-          showToast("Entry deleted.");
+          showToast(t("toast.entryDeleted"));
           await loadDiary();
         } catch (e) {
-          showToast(`Delete failed: ${e.message}`);
+          showToast(t("toast.deleteFailed", { msg: e.message }));
         } finally {
           setBusy(btn, false);
         }
@@ -775,8 +810,8 @@ function getStageInfoRows() {
       setView(true);
       updateLastSavedText(null);
       if (userEmail) userEmail.textContent = sessionUser.email;
-      await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
-      await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
+      await loadProfile().catch((e) => showToast(t("toast.profileLoadFailed", { msg: e.message })));
+      await loadDiary().catch((e) => showToast(t("toast.diaryLoadFailed", { msg: e.message })));
       await checkGlobalPopup();
     } else {
       setView(false);
@@ -789,8 +824,8 @@ function getStageInfoRows() {
         setView(true);
         updateLastSavedText(null);
         if (userEmail) userEmail.textContent = sessionUser.email;
-        await loadProfile().catch((e) => showToast(`Profile load failed: ${e.message}`));
-        await loadDiary().catch((e) => showToast(`Diary load failed: ${e.message}`));
+        await loadProfile().catch((e) => showToast(t("toast.profileLoadFailed", { msg: e.message })));
+        await loadDiary().catch((e) => showToast(t("toast.diaryLoadFailed", { msg: e.message })));
         await checkGlobalPopup();
       } else {
         setView(false);
@@ -808,9 +843,9 @@ function getStageInfoRows() {
       const password = passEl?.value || "";
       const { error } = await supa.auth.signUp({ email, password });
       if (error) throw error;
-      showToast("Signed up. You can log in now.");
+      showToast(t("toast.signedUp"));
     } catch (e) {
-      showToast(`Signup failed: ${e.message}`);
+      showToast(t("toast.signupFailed", { msg: e.message }));
     } finally {
       setBusy(btnSignup, false);
     }
@@ -823,9 +858,9 @@ function getStageInfoRows() {
       const password = passEl?.value || "";
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      showToast("Welcome back.");
+      showToast(t("toast.welcome"));
     } catch (e) {
-      showToast(`Login failed: ${e.message}`);
+      showToast(t("toast.loginFailed", { msg: e.message }));
     } finally {
       setBusy(btnLogin, false);
     }
@@ -837,9 +872,9 @@ function getStageInfoRows() {
       stopAutosave();
       const { error } = await supa.auth.signOut();
       if (error) throw error;
-      showToast("Signed out.");
+      showToast(t("toast.signedOut"));
     } catch (e) {
-      showToast(`Sign out failed: ${e.message}`);
+      showToast(t("toast.signOutFailed", { msg: e.message }));
       console.error(e);
     } finally {
       setBusy(btnSignOut, false);
@@ -850,9 +885,9 @@ function getStageInfoRows() {
     try {
       setBusy(btnStart, true);
       await setStartedNow();
-      showToast("Flame lit.");
+      showToast(t("toast.flameLit"));
     } catch (e) {
-      showToast(`Start failed: ${e.message}`);
+      showToast(t("toast.startFailed", { msg: e.message }));
     } finally {
       renderFlame();
     }
@@ -866,9 +901,9 @@ function getStageInfoRows() {
       setBusy(btnFailed, true);
       await incrementFailCountAndSave();
       await clearStartedAt();
-      showToast("It's ok to fail. Press Start when you're ready.");
+      showToast(t("toast.failOk"));
     } catch (e) {
-      showToast(`Reset failed: ${e.message}`);
+      showToast(t("toast.resetFailed", { msg: e.message }));
     } finally {
       setBusy(btnFailed, false);
     }
@@ -879,30 +914,30 @@ function getStageInfoRows() {
 
   // ----- Panic mode -----
   const BREATH_PHASES = [
-    { label: "Breathe in", seconds: 4, scale: 1.35 },
-    { label: "Hold", seconds: 4, scale: 1.35 },
-    { label: "Breathe out", seconds: 4, scale: 0.75 },
-    { label: "Hold", seconds: 4, scale: 0.75 },
+    { labelKey: "breath.in", seconds: 4, scale: 1.35 },
+    { labelKey: "breath.hold", seconds: 4, scale: 1.35 },
+    { labelKey: "breath.out", seconds: 4, scale: 0.75 },
+    { labelKey: "breath.hold", seconds: 4, scale: 0.75 },
   ];
 
   const CHALLENGES = [
-    { emoji: "💪", name: "20 pushups", seconds: 60 },
-    { emoji: "🧘", name: "1 minute plank", seconds: 60 },
-    { emoji: "🏃", name: "2 minute sprint in place", seconds: 120 },
-    { emoji: "🚿", name: "30 seconds cold water", seconds: 30 },
-    { emoji: "🪑", name: "40 squats", seconds: 90 },
-    { emoji: "🧊", name: "Sit still, do nothing", seconds: 120 },
+    { emoji: "💪", nameKey: "chal.pushups", seconds: 60 },
+    { emoji: "🧘", nameKey: "chal.plank", seconds: 60 },
+    { emoji: "🏃", nameKey: "chal.sprint", seconds: 120 },
+    { emoji: "🚿", nameKey: "chal.cold", seconds: 30 },
+    { emoji: "🪑", nameKey: "chal.squats", seconds: 90 },
+    { emoji: "🧊", nameKey: "chal.still", seconds: 120 },
   ];
 
   const QUICK_HITS = [
-    { emoji: "🥄", text: "Spoon of sugar or honey" },
-    { emoji: "🧊", text: "Cold water on your face" },
-    { emoji: "🎵", text: "Play your loudest song" },
-    { emoji: "🚶", text: "Walk to another room" },
-    { emoji: "☕", text: "Make a hot drink, slowly" },
-    { emoji: "🪟", text: "Open a window, breathe outside air" },
-    { emoji: "🧹", text: "Tidy one small thing" },
-    { emoji: "📞", text: "Text someone you like" },
+    { emoji: "🥄", textKey: "hits.sugar" },
+    { emoji: "🧊", textKey: "hits.cold" },
+    { emoji: "🎵", textKey: "hits.song" },
+    { emoji: "🚶", textKey: "hits.walk" },
+    { emoji: "☕", textKey: "hits.drink" },
+    { emoji: "🪟", textKey: "hits.window" },
+    { emoji: "🧹", textKey: "hits.tidy" },
+    { emoji: "📞", textKey: "hits.text" },
   ];
 
   let breathTimer = null;
@@ -910,6 +945,7 @@ function getStageInfoRows() {
   let breathRemaining = 0;
   let breathCycles = 0;
   let challengeTimer = null;
+  let activeChallenge = null;
 
   const breathPhaseEl = document.getElementById("breathPhase");
   const breathCountEl = document.getElementById("breathCount");
@@ -952,8 +988,8 @@ function getStageInfoRows() {
   function stopBreathing() {
     clearInterval(breathTimer);
     breathTimer = null;
-    if (btnBreathToggle) btnBreathToggle.textContent = "Start breathing";
-    if (breathPhaseEl) breathPhaseEl.textContent = "Ready";
+    if (btnBreathToggle) btnBreathToggle.textContent = t("breath.start");
+    if (breathPhaseEl) breathPhaseEl.textContent = t("breath.ready");
     if (breathCountEl) breathCountEl.textContent = "4";
     applyBreathVisual(1, 0.4);
   }
@@ -962,15 +998,15 @@ function getStageInfoRows() {
     breathPhaseIdx = idx;
     const phase = BREATH_PHASES[idx];
     breathRemaining = phase.seconds;
-    if (breathPhaseEl) breathPhaseEl.textContent = phase.label;
+    if (breathPhaseEl) breathPhaseEl.textContent = t(phase.labelKey);
     if (breathCountEl) breathCountEl.textContent = String(phase.seconds);
     applyBreathVisual(phase.scale, phase.seconds);
   }
 
   function startBreathing() {
     breathCycles = 0;
-    if (breathCyclesEl) breathCyclesEl.textContent = "Cycles completed: 0";
-    if (btnBreathToggle) btnBreathToggle.textContent = "Stop";
+    if (breathCyclesEl) breathCyclesEl.textContent = t("breath.cycles", { n: 0 });
+    if (btnBreathToggle) btnBreathToggle.textContent = t("breath.stop");
     enterBreathPhase(0);
     breathTimer = setInterval(() => {
       breathRemaining -= 1;
@@ -981,7 +1017,7 @@ function getStageInfoRows() {
       const next = (breathPhaseIdx + 1) % BREATH_PHASES.length;
       if (next === 0) {
         breathCycles += 1;
-        if (breathCyclesEl) breathCyclesEl.textContent = `Cycles completed: ${breathCycles}`;
+        if (breathCyclesEl) breathCyclesEl.textContent = t("breath.cycles", { n: breathCycles });
       }
       enterBreathPhase(next);
     }, 1000);
@@ -1013,6 +1049,7 @@ function getStageInfoRows() {
   function stopChallenge() {
     clearInterval(challengeTimer);
     challengeTimer = null;
+    activeChallenge = null;
     showChallengeStage("pick");
   }
 
@@ -1020,7 +1057,8 @@ function getStageInfoRows() {
     clearInterval(challengeTimer);
     // Deadline-based so a throttled or backgrounded tab can't stretch the timer.
     const endsAt = Date.now() + challenge.seconds * 1000;
-    if (challengeNameEl) challengeNameEl.textContent = `${challenge.emoji}  ${challenge.name}`;
+    activeChallenge = challenge;
+    if (challengeNameEl) challengeNameEl.textContent = `${challenge.emoji}  ${t(challenge.nameKey)}`;
     showChallengeStage("run");
 
     const tick = () => {
@@ -1035,12 +1073,19 @@ function getStageInfoRows() {
       if (remaining > 0) return;
       clearInterval(challengeTimer);
       challengeTimer = null;
+      activeChallenge = null;
       showChallengeStage("done");
       burstConfetti(challengeDone);
-      showToast("Challenge complete. Urge beaten. 🔥");
+      showToast(t("toast.challengeDone"));
     };
     tick();
     challengeTimer = setInterval(tick, 250);
+  }
+
+  function challengeDurationLabel(c) {
+    return c.seconds >= 60
+      ? `${fmtNumber(c.seconds / 60)}${t("dur.m")}`
+      : `${c.seconds}${t("dur.s")}`;
   }
 
   function buildPanicLists() {
@@ -1049,9 +1094,10 @@ function getStageInfoRows() {
         const btn = document.createElement("button");
         btn.className =
           "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]";
-        btn.innerHTML = `<span class="text-xl">${c.emoji}</span><span class="flex-1">${c.name}</span><span class="text-xs text-white/40">${
-          c.seconds >= 60 ? `${c.seconds / 60}m` : `${c.seconds}s`
-        }</span>`;
+        btn.innerHTML =
+          `<span class="text-xl">${c.emoji}</span>` +
+          `<span class="flex-1">${t(c.nameKey)}</span>` +
+          `<span class="text-xs text-white/40">${challengeDurationLabel(c)}</span>`;
         btn.addEventListener("click", () => startChallenge(c));
         challengeListEl.appendChild(btn);
       });
@@ -1062,7 +1108,7 @@ function getStageInfoRows() {
         const btn = document.createElement("button");
         btn.className =
           "flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 transition hover:bg-white/10 active:scale-[0.98]";
-        btn.innerHTML = `<span class="text-xl">${h.emoji}</span><span class="flex-1">${h.text}</span><span class="hit-check text-red-300" style="opacity:0">✓</span>`;
+        btn.innerHTML = `<span class="text-xl">${h.emoji}</span><span class="flex-1">${t(h.textKey)}</span><span class="hit-check text-red-300" style="opacity:0">✓</span>`;
         const check = btn.querySelector(".hit-check");
         let done = false;
         btn.addEventListener("click", () => {
@@ -1085,6 +1131,26 @@ function getStageInfoRows() {
     }
   }
 
+  // The panic lists are built once and kept; on a language switch only their
+  // labels change, so the ticked quick-fixes survive.
+  function relabelPanicLists() {
+    const relabel = (host, source, key) => {
+      if (!host) return;
+      host.querySelectorAll("button").forEach((btn, i) => {
+        const label = btn.querySelector("span.flex-1");
+        if (label && source[i]) label.textContent = t(source[i][key]);
+      });
+    };
+    relabel(challengeListEl, CHALLENGES, "nameKey");
+    relabel(hitsListEl, QUICK_HITS, "textKey");
+
+    if (challengeListEl) {
+      challengeListEl.querySelectorAll("button").forEach((btn, i) => {
+        if (CHALLENGES[i]) btn.lastElementChild.textContent = challengeDurationLabel(CHALLENGES[i]);
+      });
+    }
+  }
+
   function closePanic() {
     if (!panicModal) return;
     stopBreathing();
@@ -1097,6 +1163,7 @@ function getStageInfoRows() {
     if (panicModal) {
       buildPanicLists();
       setPanicTab("breathe");
+      if (breathCyclesEl) breathCyclesEl.textContent = t("breath.cycles", { n: breathCycles });
       panicModal.classList.remove("hidden");
       panicModal.classList.add("flex");
     }
@@ -1129,21 +1196,21 @@ function getStageInfoRows() {
 
   on(btnAddEntry, "click", async () => {
     const text = (diaryText?.value || "").trim();
-    if (!text) return showToast("Write something first.");
+    if (!text) return showToast(t("toast.writeFirst"));
     if (text.toLowerCase() === "i miss clawd") {
       const clawdTrack = document.getElementById("clawdTrack");
       if (clawdTrack) clawdTrack.classList.remove("hidden");
       diaryText.value = "";
-      return showToast("Clawd scuttles back! 🦀");
+      return showToast(t("toast.clawdBack"));
     }
     try {
       setBusy(btnAddEntry, true);
       await addDiaryEntry(text);
       if (diaryText) diaryText.value = "";
-      showToast("Entry saved.");
+      showToast(t("toast.entrySaved"));
       await loadDiary();
     } catch (e) {
-      showToast(`Save failed: ${e.message}`);
+      showToast(t("toast.saveFailed", { msg: e.message }));
     } finally {
       setBusy(btnAddEntry, false);
     }
@@ -1153,9 +1220,9 @@ function getStageInfoRows() {
     try {
       setBusy(btnRefreshDiary, true);
       await loadDiary();
-      showToast("Diary refreshed.");
+      showToast(t("toast.diaryRefreshed"));
     } catch (e) {
-      showToast(`Refresh failed: ${e.message}`);
+      showToast(t("toast.refreshFailed", { msg: e.message }));
     } finally {
       setBusy(btnRefreshDiary, false);
     }
@@ -1202,7 +1269,7 @@ function getStageInfoRows() {
       setBusy(btnSaveAchievements, true);
       await saveAchievementsNow();
     } catch (e) {
-      showToast(`Save failed: ${e.message}`);
+      showToast(t("toast.saveFailed", { msg: e.message }));
       console.error(e);
     } finally {
       setBusy(btnSaveAchievements, false);
@@ -1215,6 +1282,34 @@ function getStageInfoRows() {
       saveAllNow(true).catch((e) => console.error("Visibility save failed:", e));
     }
   });
+
+  // ----- Language switching -----
+  // i18n.js swaps everything carrying a data-i18n attribute; this covers the
+  // rest — anything this file writes into the DOM at runtime.
+  if (I18N) {
+    I18N.onChange(() => {
+      renderFlame();
+      renderAchievementsUI();
+      if (flameInfoModal && !flameInfoModal.classList.contains("hidden")) renderFlameInfo();
+      renderDiary();
+      relabelPanicLists();
+      updateLastSavedText(lastSavedAt);
+
+      if (breathPhaseEl) {
+        breathPhaseEl.textContent = breathTimer
+          ? t(BREATH_PHASES[breathPhaseIdx].labelKey)
+          : t("breath.ready");
+      }
+      if (btnBreathToggle) {
+        btnBreathToggle.textContent = breathTimer ? t("breath.stop") : t("breath.start");
+      }
+      if (breathCyclesEl) breathCyclesEl.textContent = t("breath.cycles", { n: breathCycles });
+
+      if (activeChallenge && challengeNameEl) {
+        challengeNameEl.textContent = `${activeChallenge.emoji}  ${t(activeChallenge.nameKey)}`;
+      }
+    });
+  }
 
   // go
   init();
