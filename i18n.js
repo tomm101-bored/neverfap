@@ -1504,7 +1504,7 @@
   // ---- Language picker ----
   var PICKER_CLASS =
     "cursor-pointer appearance-none rounded-xl border border-white/10 bg-white/5 " +
-    "px-3 py-2 text-sm font-semibold text-white/80 outline-none transition " +
+    "px-3 py-2 text-center text-sm font-semibold text-white/80 outline-none transition " +
     "hover:bg-white/10 focus:border-orange-400/40";
 
   function mountPickers(root) {
